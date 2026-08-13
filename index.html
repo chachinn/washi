@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7b7c9" />
+  <meta name="color-scheme" content="light" />
+
+  <title>Washi — Story & Creative Studio</title>
+  <meta name="description"
+        content="Create beautiful stories, photo dumps, collages, videos, text layouts, and reusable social templates." />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-icon" src="icons/icon-192.png" alt="" />
+        <div>
+          <p class="eyebrow">Story & Creative Studio</p>
+          <h1>Washi</h1>
+        </div>
+      </div>
+
+      <button class="icon-button" id="menuButton" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero-card">
+        <div class="hero-copy">
+          <span class="pill">Create something cute ✦</span>
+          <h2>Your photos, videos, words — made a little more you.</h2>
+          <p>
+            Start with a story, post, photo dump, collage, reel cover, mood board,
+            or your own reusable template.
+          </p>
+        </div>
+
+        <button class="primary-button" id="newDesignButton">
+          <span class="plus">＋</span>
+          New design
+        </button>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Start creating</p>
+            <h3>What are you making?</h3>
+          </div>
+        </div>
+
+        <div class="creation-grid" id="creationGrid">
+          <button class="creation-card" data-type="Instagram Story" data-size="1080 × 1920">
+            <span class="card-icon">♡</span>
+            <strong>Story</strong>
+            <small>1080 × 1920</small>
+          </button>
+
+          <button class="creation-card" data-type="Portrait Post" data-size="1080 × 1350">
+            <span class="card-icon">▧</span>
+            <strong>Post</strong>
+            <small>1080 × 1350</small>
+          </button>
+
+          <button class="creation-card" data-type="Photo Dump" data-size="1080 × 1350">
+            <span class="card-icon">✿</span>
+            <strong>Photo dump</strong>
+            <small>Auto layouts</small>
+          </button>
+
+          <button class="creation-card" data-type="Reel Cover" data-size="1080 × 1920">
+            <span class="card-icon">▶</span>
+            <strong>Reel cover</strong>
+            <small>1080 × 1920</small>
+          </button>
+
+          <button class="creation-card" data-type="Collage" data-size="Custom">
+            <span class="card-icon">✦</span>
+            <strong>Collage</strong>
+            <small>Freeform</small>
+          </button>
+
+          <button class="creation-card" data-type="Mood Board" data-size="Custom">
+            <span class="card-icon">⌁</span>
+            <strong>Mood board</strong>
+            <small>Mix & match</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Made for you</p>
+            <h3>Template ideas</h3>
+          </div>
+          <button class="text-button" id="shuffleButton">Shuffle</button>
+        </div>
+
+        <div class="template-row" id="templateRow">
+          <button class="template-card template-pink" data-template="Life lately">
+            <span>life lately</span>
+            <small>photo dump</small>
+          </button>
+
+          <button class="template-card template-paper" data-template="Little things">
+            <span>little things</span>
+            <small>journal story</small>
+          </button>
+
+          <button class="template-card template-editorial" data-template="Weekend">
+            <span>WEEKEND</span>
+            <small>mini recap</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="section-block about-card">
+        <p class="eyebrow">About Washi</p>
+        <h3>和紙</h3>
+        <p>
+          <strong>Washi (和紙)</strong> is traditional Japanese paper, known for its beauty,
+          texture, and the many ways it can be shaped, layered, and decorated. Washi brings
+          that same idea to your photos, videos, and words—giving you a playful space to
+          arrange little pieces of your life into stories that feel completely your own.
+        </p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="nav-item active" data-route="Home">
+        <span>⌂</span>
+        <small>Home</small>
+      </button>
+      <button class="nav-item" data-route="Templates">
+        <span>▦</span>
+        <small>Templates</small>
+      </button>
+      <button class="nav-create" id="navCreateButton" aria-label="Create new design">＋</button>
+      <button class="nav-item" data-route="Projects">
+        <span>◇</span>
+        <small>Projects</small>
+      </button>
+      <button class="nav-item" data-route="Favorites">
+        <span>♡</span>
+        <small>Saved</small>
+      </button>
+    </nav>
+  </div>
+
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">Washi</p>
+          <h2>Creative tools</h2>
+        </div>
+        <button class="icon-button close-button" id="closeMenuButton" aria-label="Close menu">×</button>
+      </div>
+
+      <div class="drawer-links">
+        <button data-route="My Projects">My Projects <span>›</span></button>
+        <button data-route="Brand & Style">My Style <span>›</span></button>
+        <button data-route="Fonts">Fonts <span>›</span></button>
+        <button data-route="Stickers">Stickers & Doodles <span>›</span></button>
+        <button data-route="Palettes">Color Palettes <span>›</span></button>
+        <button data-route="Settings">Settings <span>›</span></button>
+      </div>
+
+      <div class="drawer-note">
+        <strong>Washi (和紙)</strong>
+        <p>A creative space for layering the little pieces of your life.</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class="sheet" id="createSheet" aria-hidden="true">
+    <div class="sheet-backdrop" data-close-sheet></div>
+    <div class="sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-heading">
+        <div>
+          <p class="eyebrow">New project</p>
+          <h2 id="sheetTitle">Choose a format</h2>
+        </div>
+        <button class="icon-button close-button" data-close-sheet aria-label="Close">×</button>
+      </div>
+
+      <div class="format-list">
+        <button data-format="Instagram Story" data-size="1080 × 1920">
+          <span>Story</span><small>1080 × 1920</small>
+        </button>
+        <button data-format="Portrait Post" data-size="1080 × 1350">
+          <span>Portrait post</span><small>1080 × 1350</small>
+        </button>
+        <button data-format="Square Post" data-size="1080 × 1080">
+          <span>Square post</span><small>1080 × 1080</small>
+        </button>
+        <button data-format="Reel Cover" data-size="1080 × 1920">
+          <span>Reel cover</span><small>1080 × 1920</small>
+        </button>
+        <button data-format="Custom Canvas" data-size="Custom">
+          <span>Custom size</span><small>Set your own dimensions</small>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
