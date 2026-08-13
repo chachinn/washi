@@ -132,13 +132,11 @@
     }
   });
 
-  // Prevent browser page zoom from double-tap / pinch while preserving object-level
-  // gesture support for the editor we will add later.
   document.addEventListener("gesturestart", (event) => event.preventDefault(), { passive: false });
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./service-worker.js").catch((error) => {
+      navigator.serviceWorker.register("./sw.js").catch((error) => {
         console.warn("Service worker registration failed:", error);
       });
     });
