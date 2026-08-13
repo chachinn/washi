@@ -2,227 +2,193 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#f7b7c9" />
   <meta name="color-scheme" content="light" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Washi" />
-
   <title>Washi — Story & Creative Studio</title>
-  <meta name="description"
-        content="Create beautiful stories, photo dumps, collages, videos, text layouts, and reusable social templates." />
-
-  <link rel="manifest" href="./manifest.json?v=20260814" />
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=20260814" />
-  <link rel="shortcut icon" type="image/png" href="./icons/icon-192.png?v=20260814" />
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=20260814" />
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Create stories, photo dumps, collages, videos, text layouts, and reusable social templates." />
+  <link rel="manifest" href="./manifest.json?v=20260814r1" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=20260814r1" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=20260814r1" />
+  <link rel="stylesheet" href="./style.css?v=20260814r1" />
+  <link rel="stylesheet" href="./editor.css?v=20260814r1" />
 </head>
-
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <img class="brand-icon" src="icons/icon-192.png" alt="" />
-        <div>
-          <p class="eyebrow">Story & Creative Studio</p>
-          <h1>Washi</h1>
+<div id="app" class="app-shell">
+  <header class="topbar" id="topbar">
+    <button class="brand-button" data-route="home" aria-label="Go home">
+      <img src="./icons/icon-192.png" class="brand-icon" alt="" />
+      <span><small>Story & Creative Studio</small><strong>Washi</strong></span>
+    </button>
+    <div class="top-actions">
+      <button class="round-button" id="searchButton" data-route="templates" aria-label="Search templates">⌕</button>
+      <button class="round-button hamburger" id="menuButton" aria-label="Open menu"><i></i><i></i><i></i></button>
+    </div>
+  </header>
+
+  <main id="mainContent">
+    <section class="view active" data-view="home" id="homeView">
+      <div class="hero-card paper-texture">
+        <span class="soft-pill">make something lovely ✦</span>
+        <h1>Your moments,<br><em>made your way.</em></h1>
+        <p>Turn photos, videos, words, colors, and little details into stories that feel like you.</p>
+        <div class="hero-actions">
+          <button class="primary-button" data-action="new-project">＋ New design</button>
+          <button class="secondary-button" data-route="templates">Browse templates</button>
         </div>
       </div>
 
-      <button class="icon-button" id="menuButton" aria-label="Open menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </header>
+      <article class="name-story-card">
+        <div class="name-story-mark">和紙</div>
+        <div><span class="section-kicker">Why Washi?</span><p><strong>Washi (和紙)</strong> means “Japanese paper.” Inspired by its beautiful textures and patterns, Washi is a creative space for turning photos and videos into stories that feel personal and uniquely yours.</p></div>
+      </article>
 
-    <main>
-      <section class="hero-card">
-        <div class="hero-copy">
-          <span class="pill">Create something cute ✦</span>
-          <h2>Your photos, videos, words — made a little more you.</h2>
-          <p>
-            Start with a story, post, photo dump, collage, reel cover, mood board,
-            or your own reusable template.
-          </p>
+      <section class="home-section">
+        <div class="section-heading"><div><span class="section-kicker">Start creating</span><h2>What are you making?</h2></div></div>
+        <div class="format-grid">
+          <button class="format-card" data-format="story"><b>♡</b><span>Story</span><small>1080 × 1920</small></button>
+          <button class="format-card" data-format="portrait"><b>▧</b><span>Post</span><small>1080 × 1350</small></button>
+          <button class="format-card" data-format="square"><b>◇</b><span>Square</span><small>1080 × 1080</small></button>
+          <button class="format-card" data-format="reel"><b>▶</b><span>Reel cover</span><small>1080 × 1920</small></button>
+          <button class="format-card" data-format="dump"><b>✿</b><span>Photo dump</span><small>Smart layouts</small></button>
+          <button class="format-card" data-format="custom"><b>⌁</b><span>Custom</span><small>Your dimensions</small></button>
         </div>
-
-        <button class="primary-button" id="newDesignButton">
-          <span class="plus">＋</span>
-          New design
-        </button>
       </section>
 
-      <section class="section-block">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Start creating</p>
-            <h3>What are you making?</h3>
+      <section class="home-section">
+        <div class="section-heading"><div><span class="section-kicker">Quick tools</span><h2>Make it faster</h2></div></div>
+        <div class="quick-grid">
+          <button class="quick-card" data-action="photo-dump"><span>🎞️</span><b>Photo Dump</b><small>Choose photos; Washi arranges them.</small></button>
+          <button class="quick-card" data-action="palette"><span>🎨</span><b>Palette from Photo</b><small>Pull matching colors from a picture.</small></button>
+          <button class="quick-card" data-action="fun-text"><span>✍️</span><b>Fun Text</b><small>Life lately, POV, tiny joys & more.</small></button>
+          <button class="quick-card" data-route="templates"><span>✦</span><b>Template Library</b><small>Scrapbook, film, travel, couples & more.</small></button>
+        </div>
+      </section>
+
+      <section class="home-section">
+        <div class="section-heading"><div><span class="section-kicker">Made for you</span><h2>Template ideas</h2></div><button class="text-button" data-route="templates">See all</button></div>
+        <div class="template-scroller" id="homeTemplates"></div>
+      </section>
+
+      <section class="home-section">
+        <div class="section-heading"><div><span class="section-kicker">Keep creating</span><h2>Recent projects</h2></div><button class="text-button" data-route="projects">See all</button></div>
+        <div class="project-grid compact" id="recentProjects"></div>
+      </section>
+    </section>
+
+    <section class="view" data-view="templates" id="templatesView">
+      <div class="page-heading"><span class="section-kicker">Template library</span><h1>Find your starting point.</h1><p>Every template stays editable. Delete, recolor, resize, replace, remix—nothing is locked.</p></div>
+      <div class="search-wrap"><span>⌕</span><input id="templateSearch" type="search" placeholder="Search templates, moods, occasions…" /></div>
+      <div class="chip-row" id="templateChips"></div>
+      <div class="template-library" id="templateLibrary"></div>
+    </section>
+
+    <section class="view editor-view" data-view="editor" id="editorView">
+      <header class="editor-header">
+        <button class="editor-icon-button" id="exitEditor" aria-label="Back">‹</button>
+        <button class="project-title-button" id="renameProject"><span id="projectTitle">Untitled</span><small id="projectSize">1080 × 1920</small></button>
+        <div class="editor-header-actions">
+          <button class="editor-icon-button" id="undoButton" aria-label="Undo">↶</button>
+          <button class="editor-icon-button" id="redoButton" aria-label="Redo">↷</button>
+          <button class="export-button" id="exportButton">Export</button>
+        </div>
+      </header>
+
+      <div class="editor-workspace" id="editorWorkspace">
+        <div class="workspace-tools">
+          <button data-canvas-action="zoom-out">−</button><span id="zoomLabel">100%</span><button data-canvas-action="zoom-in">＋</button><button data-canvas-action="fit">Fit</button>
+        </div>
+        <div class="stage-scroll" id="stageScroll">
+          <div class="stage-frame" id="stageFrame">
+            <div class="design-stage" id="designStage" tabindex="0">
+              <div class="grid-overlay" id="gridOverlay"></div>
+              <div class="safe-zone-overlay" id="safeZoneOverlay"><i class="safe-top"></i><i class="safe-bottom"></i><i class="safe-center-v"></i><i class="safe-center-h"></i></div>
+              <div class="objects-layer" id="objectsLayer"></div>
+              <svg id="drawingLayer" class="drawing-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+              <div class="alignment-guides" id="alignmentGuides"><i class="guide-v"></i><i class="guide-h"></i></div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="creation-grid" id="creationGrid">
-          <button class="creation-card" data-type="Instagram Story" data-size="1080 × 1920">
-            <span class="card-icon">♡</span>
-            <strong>Story</strong>
-            <small>1080 × 1920</small>
-          </button>
+      <div class="selection-bar" id="selectionBar" hidden>
+        <button data-object-action="duplicate">Duplicate</button>
+        <button data-object-action="fill" hidden>Fill</button>
+        <button data-object-action="rotate90">90°</button>
+        <button data-object-action="center">Center</button>
+        <button data-object-action="front">Forward</button>
+        <button data-object-action="back">Backward</button>
+        <button data-object-action="lock">Lock</button>
+        <button data-object-action="delete" class="danger">Delete</button>
+      </div>
 
-          <button class="creation-card" data-type="Portrait Post" data-size="1080 × 1350">
-            <span class="card-icon">▧</span>
-            <strong>Post</strong>
-            <small>1080 × 1350</small>
-          </button>
+      <section class="editor-panel" id="editorPanel" aria-hidden="true"><div class="panel-handle"></div><div id="panelContent"></div></section>
 
-          <button class="creation-card" data-type="Photo Dump" data-size="1080 × 1350">
-            <span class="card-icon">✿</span>
-            <strong>Photo dump</strong>
-            <small>Auto layouts</small>
-          </button>
+      <nav class="editor-toolbar" id="editorToolbar">
+        <button data-tool="add" class="active"><span>＋</span><small>Add</small></button>
+        <button data-tool="text"><span>Aa</span><small>Text</small></button>
+        <button data-tool="media"><span>▧</span><small>Media</small></button>
+        <button data-tool="stickers"><span>✦</span><small>Decor</small></button>
+        <button data-tool="draw"><span>⌁</span><small>Draw</small></button>
+        <button data-tool="style"><span>◐</span><small>Style</small></button>
+        <button data-tool="layers"><span>▤</span><small>Layers</small></button>
+        <button data-tool="more"><span>•••</span><small>More</small></button>
+      </nav>
+    </section>
 
-          <button class="creation-card" data-type="Reel Cover" data-size="1080 × 1920">
-            <span class="card-icon">▶</span>
-            <strong>Reel cover</strong>
-            <small>1080 × 1920</small>
-          </button>
+    <section class="view" data-view="projects" id="projectsView">
+      <div class="page-heading with-action"><div><span class="section-kicker">Your work</span><h1>Projects</h1><p>Autosaved locally on this device.</p></div><button class="primary-button small" data-action="new-project">＋ New</button></div>
+      <div class="project-tools"><div class="search-wrap small"><span>⌕</span><input id="projectSearch" type="search" placeholder="Search projects" /></div><select id="projectSort"><option value="updated">Recently edited</option><option value="created">Newest</option><option value="name">Name</option></select></div>
+      <div class="project-grid" id="allProjects"></div>
+    </section>
 
-          <button class="creation-card" data-type="Collage" data-size="Custom">
-            <span class="card-icon">✦</span>
-            <strong>Collage</strong>
-            <small>Freeform</small>
-          </button>
+    <section class="view" data-view="saved" id="savedView">
+      <div class="page-heading"><span class="section-kicker">Your favorites</span><h1>Saved</h1><p>Favorite templates, palettes, reusable layouts, and your style.</p></div>
+      <div class="saved-tabs"><button class="active" data-saved="templates">Templates</button><button data-saved="palettes">Palettes</button><button data-saved="mytemplates">My Templates</button><button data-saved="styles">My Style</button></div>
+      <div id="savedContent"></div>
+    </section>
+  </main>
 
-          <button class="creation-card" data-type="Mood Board" data-size="Custom">
-            <span class="card-icon">⌁</span>
-            <strong>Mood board</strong>
-            <small>Mix & match</small>
-          </button>
-        </div>
-      </section>
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" data-route="home"><span>⌂</span><small>Home</small></button>
+    <button class="nav-item" data-route="templates"><span>▦</span><small>Templates</small></button>
+    <button class="nav-create" data-action="new-project" aria-label="Create">＋</button>
+    <button class="nav-item" data-route="projects"><span>◇</span><small>Projects</small></button>
+    <button class="nav-item" data-route="saved"><span>♡</span><small>Saved</small></button>
+  </nav>
+</div>
 
-      <section class="section-block">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Made for you</p>
-            <h3>Template ideas</h3>
-          </div>
-          <button class="text-button" id="shuffleButton">Shuffle</button>
-        </div>
-
-        <div class="template-row" id="templateRow">
-          <button class="template-card template-pink" data-template="Life lately">
-            <span>life lately</span>
-            <small>photo dump</small>
-          </button>
-
-          <button class="template-card template-paper" data-template="Little things">
-            <span>little things</span>
-            <small>journal story</small>
-          </button>
-
-          <button class="template-card template-editorial" data-template="Weekend">
-            <span>WEEKEND</span>
-            <small>mini recap</small>
-          </button>
-        </div>
-      </section>
-
-      <section class="section-block about-card">
-        <p class="eyebrow">About Washi</p>
-        <h3>和紙</h3>
-        <p>
-          <strong>Washi (和紙)</strong> is traditional Japanese paper, known for its beauty,
-          texture, and the many ways it can be shaped, layered, and decorated. Washi brings
-          that same idea to your photos, videos, and words—giving you a playful space to
-          arrange little pieces of your life into stories that feel completely your own.
-        </p>
-      </section>
-    </main>
-
-    <nav class="bottom-nav" aria-label="Main navigation">
-      <button class="nav-item active" data-route="Home">
-        <span>⌂</span>
-        <small>Home</small>
-      </button>
-      <button class="nav-item" data-route="Templates">
-        <span>▦</span>
-        <small>Templates</small>
-      </button>
-      <button class="nav-create" id="navCreateButton" aria-label="Create new design">＋</button>
-      <button class="nav-item" data-route="Projects">
-        <span>◇</span>
-        <small>Projects</small>
-      </button>
-      <button class="nav-item" data-route="Favorites">
-        <span>♡</span>
-        <small>Saved</small>
-      </button>
-    </nav>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-backdrop" data-close-drawer></div>
+  <div class="drawer-panel">
+    <div class="drawer-header"><div class="drawer-brand"><img src="./icons/icon-192.png" alt=""><div><small>Story & Creative Studio</small><strong>Washi</strong></div></div><button class="round-button" data-close-drawer>×</button></div>
+    <div class="drawer-about paper-texture"><span>和紙</span><p><strong>Washi (和紙)</strong> means “Japanese paper.” Inspired by its beautiful textures and patterns, Washi is a creative space for turning photos and videos into stories that feel personal and uniquely yours.</p></div>
+    <div class="drawer-label">Create</div>
+    <div class="drawer-links"><button data-action="new-project">New Design <span>›</span></button><button data-route="templates">Template Library <span>›</span></button><button data-action="photo-dump">Photo Dump Generator <span>›</span></button><button data-action="fun-text">Fun Text Templates <span>›</span></button></div>
+    <div class="drawer-label">Your studio</div>
+    <div class="drawer-links"><button data-route="projects">My Projects <span>›</span></button><button data-route="saved">Favorites & Saved <span>›</span></button><button data-action="my-style">My Style <span>›</span></button><button data-action="palette">Color Palettes <span>›</span></button></div>
+    <div class="drawer-label">Tools & settings</div>
+    <div class="drawer-links"><button data-action="safe-zones">Instagram Safe Zones <span>›</span></button><button data-action="settings">Editor Settings <span>›</span></button><button data-action="whats-new">What’s New <span class="new-badge">NEW</span></button></div>
+    <div class="drawer-version">Washi 1.0.0 · Creative Studio release</div>
   </div>
+</aside>
 
-  <aside class="drawer" id="drawer" aria-hidden="true">
-    <div class="drawer-backdrop" id="drawerBackdrop"></div>
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">Washi</p>
-          <h2>Creative tools</h2>
-        </div>
-        <button class="icon-button close-button" id="closeMenuButton" aria-label="Close menu">×</button>
-      </div>
+<div class="modal" id="modal" aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="modal-card"><div class="modal-handle"></div><div id="modalContent"></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-      <div class="drawer-links">
-        <button data-route="My Projects">My Projects <span>›</span></button>
-        <button data-route="Brand & Style">My Style <span>›</span></button>
-        <button data-route="Fonts">Fonts <span>›</span></button>
-        <button data-route="Stickers">Stickers & Doodles <span>›</span></button>
-        <button data-route="Palettes">Color Palettes <span>›</span></button>
-        <button data-route="Settings">Settings <span>›</span></button>
-      </div>
+<input type="file" id="mediaInput" accept="image/*,video/*" multiple hidden />
+<input type="file" id="photoDumpInput" accept="image/*" multiple hidden />
+<input type="file" id="paletteInput" accept="image/*" hidden />
+<input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" hidden />
 
-      <div class="drawer-note">
-        <strong>Washi (和紙)</strong>
-        <p>A creative space for layering the little pieces of your life.</p>
-      </div>
-    </div>
-  </aside>
-
-  <div class="sheet" id="createSheet" aria-hidden="true">
-    <div class="sheet-backdrop" data-close-sheet></div>
-    <div class="sheet-panel">
-      <div class="sheet-handle"></div>
-      <div class="sheet-heading">
-        <div>
-          <p class="eyebrow">New project</p>
-          <h2 id="sheetTitle">Choose a format</h2>
-        </div>
-        <button class="icon-button close-button" data-close-sheet aria-label="Close">×</button>
-      </div>
-
-      <div class="format-list">
-        <button data-format="Instagram Story" data-size="1080 × 1920">
-          <span>Story</span><small>1080 × 1920</small>
-        </button>
-        <button data-format="Portrait Post" data-size="1080 × 1350">
-          <span>Portrait post</span><small>1080 × 1350</small>
-        </button>
-        <button data-format="Square Post" data-size="1080 × 1080">
-          <span>Square post</span><small>1080 × 1080</small>
-        </button>
-        <button data-format="Reel Cover" data-size="1080 × 1920">
-          <span>Reel cover</span><small>1080 × 1920</small>
-        </button>
-        <button data-format="Custom Canvas" data-size="Custom">
-          <span>Custom size</span><small>Set your own dimensions</small>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <script src="app.js" defer></script>
+<script src="./js/db.js?v=20260814r1" defer></script>
+<script src="./js/templates.js?v=20260814r1" defer></script>
+<script src="./js/editor.js?v=20260814r1" defer></script>
+<script src="./js/export.js?v=20260814r1" defer></script>
+<script src="./app.js?v=20260814r1" defer></script>
 </body>
 </html>
