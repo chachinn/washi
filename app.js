@@ -1,144 +1,63 @@
 (() => {
-  "use strict";
-
-  const $ = (selector, scope = document) => scope.querySelector(selector);
-  const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
-
-  const drawer = $("#drawer");
-  const menuButton = $("#menuButton");
-  const closeMenuButton = $("#closeMenuButton");
-  const drawerBackdrop = $("#drawerBackdrop");
-  const createSheet = $("#createSheet");
-  const toast = $("#toast");
-
-  let toastTimer = null;
-
-  const showToast = (message) => {
-    clearTimeout(toastTimer);
-    toast.textContent = message;
-    toast.classList.add("show");
-    toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
-  };
-
-  const setBodyModalState = () => {
-    const open = drawer.classList.contains("open") || createSheet.classList.contains("open");
-    document.body.classList.toggle("modal-open", open);
-  };
-
-  const openDrawer = () => {
-    drawer.classList.add("open");
-    drawer.setAttribute("aria-hidden", "false");
-    menuButton.setAttribute("aria-expanded", "true");
-    setBodyModalState();
-  };
-
-  const closeDrawer = () => {
-    drawer.classList.remove("open");
-    drawer.setAttribute("aria-hidden", "true");
-    menuButton.setAttribute("aria-expanded", "false");
-    setBodyModalState();
-  };
-
-  const openCreateSheet = (title = "Choose a format") => {
-    $("#sheetTitle").textContent = title;
-    createSheet.classList.add("open");
-    createSheet.setAttribute("aria-hidden", "false");
-    setBodyModalState();
-  };
-
-  const closeCreateSheet = () => {
-    createSheet.classList.remove("open");
-    createSheet.setAttribute("aria-hidden", "true");
-    setBodyModalState();
-  };
-
-  menuButton.addEventListener("click", openDrawer);
-  closeMenuButton.addEventListener("click", closeDrawer);
-  drawerBackdrop.addEventListener("click", closeDrawer);
-
-  $("#newDesignButton").addEventListener("click", () => openCreateSheet());
-  $("#navCreateButton").addEventListener("click", () => openCreateSheet());
-
-  $$("[data-close-sheet]").forEach((el) => el.addEventListener("click", closeCreateSheet));
-
-  $$(".creation-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      const type = card.dataset.type;
-      const size = card.dataset.size;
-      localStorage.setItem("washi:last-format", JSON.stringify({ type, size }));
-      openCreateSheet(`${type} · ${size}`);
-    });
-  });
-
-  $$(".format-list button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const project = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        type: button.dataset.format,
-        size: button.dataset.size,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      const projects = JSON.parse(localStorage.getItem("washi:projects") || "[]");
-      projects.unshift(project);
-      localStorage.setItem("washi:projects", JSON.stringify(projects.slice(0, 50)));
-
-      closeCreateSheet();
-      showToast(`${project.type} project created`);
-    });
-  });
-
-  $$(".template-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      showToast(`${card.dataset.template} selected`);
-    });
-  });
-
-  const templateRow = $("#templateRow");
-  $("#shuffleButton").addEventListener("click", () => {
-    const cards = [...templateRow.children];
-    if (cards.length > 1) {
-      templateRow.append(cards[0]);
-      showToast("Templates shuffled ✦");
-    }
-  });
-
-  $$(".nav-item").forEach((item) => {
-    item.addEventListener("click", () => {
-      $$(".nav-item").forEach((nav) => nav.classList.remove("active"));
-      item.classList.add("active");
-      const route = item.dataset.route;
-
-      if (route === "Home") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
-        showToast(`${route} is ready for the next build`);
-      }
-    });
-  });
-
-  $$(".drawer-links button").forEach((button) => {
-    button.addEventListener("click", () => {
-      closeDrawer();
-      showToast(`${button.dataset.route} is ready for the next build`);
-    });
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      closeDrawer();
-      closeCreateSheet();
-    }
-  });
-
-  document.addEventListener("gesturestart", (event) => event.preventDefault(), { passive: false });
-
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch((error) => {
-        console.warn("Service worker registration failed:", error);
-      });
-    });
-  }
+'use strict';
+const W=window.Washi,DB=W.DB,T=W.Templates,E=W.Editor,X=W.Export,$=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const drawer=$('#drawer'),modal=$('#modal'),mc=$('#modalContent'),toast=$('#toast'),panel=$('#editorPanel'),pc=$('#panelContent');
+let toastTimer=0,tool='add',category='All',savedTab='templates',replaceMedia=false,propertyTimer=0;
+const esc=v=>String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+function say(msg){clearTimeout(toastTimer);toast.textContent=msg;toast.classList.add('show');toastTimer=setTimeout(()=>toast.classList.remove('show'),2100)}
+function lockBody(){document.body.classList.toggle('modal-open',drawer.classList.contains('open')||modal.classList.contains('open'))}
+function openDrawer(){drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');lockBody()}
+function closeDrawer(){drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');lockBody()}
+function openModal(html){mc.innerHTML=html;modal.classList.add('open');modal.setAttribute('aria-hidden','false');lockBody()}
+function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');lockBody()}
+const modalHead=(title,desc='')=>`<div class="modal-title"><div><h2>${esc(title)}</h2>${desc?`<p>${desc}</p>`:''}</div><button class="modal-close" data-close-modal>×</button></div>`;
+function route(name){closeDrawer();closeModal();$$('.view').forEach(v=>v.classList.toggle('active',v.dataset.view===name));$$('.nav-item').forEach(v=>v.classList.toggle('active',v.dataset.route===name));if(name==='home')renderHome();if(name==='templates')renderTemplates();if(name==='projects')renderProjects();if(name==='saved')renderSaved();if(name==='editor')requestAnimationFrame(()=>{E.render();E.fit();openPanel(tool)});else{panel.classList.remove('open');E.setDrawMode(false)}window.scrollTo({top:0,behavior:DB.getSettings().reducedMotion?'auto':'smooth'})}
+const bgStyle=b=>!b?'#fff':b.type==='solid'?b.value:b.type==='gradient'?b.value:b.color||'#fffaf5';
+function templateCard(t){const fav=DB.getFavorites().templates.includes(t.id),count=(t.objects||[]).filter(o=>o.type==='placeholder').length,label=(t.objects||[]).find(o=>o.type==='text')?.text||t.title;return `<article class="template-card" data-template-id="${t.id}" style="background:${bgStyle(t.bg)}"><button class="favorite-button ${fav?'on':''}" data-favorite-template="${t.id}">${fav?'♥':'♡'}</button><div class="template-preview"><div style="position:absolute;inset:12% 13% auto;height:33%;border-radius:14px;background:rgba(255,255,255,.62)"></div>${count>1?'<div style="position:absolute;left:22%;right:8%;top:44%;height:25%;border-radius:12px;background:rgba(255,255,255,.5);transform:rotate(4deg)"></div>':''}</div><div class="template-card-content"><strong>${esc(label.slice(0,34))}</strong><small>${esc(t.category)}</small></div></article>`}
+function projectCard(p){const txt=(p.objects||[]).find(o=>o.type==='text')?.text||p.name;return `<article class="project-card"><button class="project-thumb" data-open-project="${p.id}" style="background:${bgStyle(p.bg)};border:0;width:100%"><span>${esc((txt||'Washi').slice(0,34))}</span></button><div class="project-card-info"><strong>${esc(p.name||'Untitled')}</strong><small>${p.width} × ${p.height}</small></div><div class="project-card-actions"><button data-project-action="duplicate" data-id="${p.id}">Duplicate</button><button class="danger" data-project-action="delete" data-id="${p.id}">Delete</button></div></article>`}
+function renderHome(){const ht=$('#homeTemplates');if(ht)ht.innerHTML=T.TEMPLATES.slice(0,8).map(templateCard).join('');const r=$('#recentProjects');if(!r)return;const list=DB.getProjects().sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt)).slice(0,6);r.innerHTML=list.length?list.map(projectCard).join(''):`<div class="empty-state"><span>✦</span><b>No projects yet</b><small>Your designs will appear here after you create them.</small><br><button class="primary-button" data-action="new-project">Create your first design</button></div>`}
+function renderTemplates(){const chips=$('#templateChips'),lib=$('#templateLibrary');if(!chips||!lib)return;const cats=['All',...new Set(T.TEMPLATES.map(t=>t.category))];chips.innerHTML=cats.map(c=>`<button class="chip ${c===category?'active':''}" data-template-category="${esc(c)}">${esc(c)}</button>`).join('');const q=($('#templateSearch')?.value||'').trim().toLowerCase(),list=T.TEMPLATES.filter(t=>(category==='All'||t.category===category)&&(!q||`${t.title} ${t.category} ${(t.tags||[]).join(' ')}`.toLowerCase().includes(q)));lib.innerHTML=list.length?list.map(templateCard).join(''):'<div class="empty-state"><b>No matches</b><small>Try another search or category.</small></div>'}
+function renderProjects(){const r=$('#allProjects');if(!r)return;let list=DB.getProjects(),q=($('#projectSearch')?.value||'').toLowerCase(),sort=$('#projectSort')?.value||'updated';if(q)list=list.filter(p=>(p.name||'').toLowerCase().includes(q));list.sort(sort==='name'?(a,b)=>(a.name||'').localeCompare(b.name||''):sort==='created'?(a,b)=>new Date(b.createdAt)-new Date(a.createdAt):(a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));r.innerHTML=list.length?list.map(projectCard).join(''):`<div class="empty-state"><span>◇</span><b>No projects yet</b><small>Create a blank design or start from a template.</small><br><button class="primary-button" data-action="new-project">New design</button></div>`}
+function renderSaved(){const r=$('#savedContent');if(!r)return;$$('.saved-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.saved===savedTab));if(savedTab==='templates'){const ids=DB.getFavorites().templates||[],list=T.TEMPLATES.filter(t=>ids.includes(t.id));r.innerHTML=list.length?`<div class="template-library">${list.map(templateCard).join('')}</div>`:'<div class="empty-state"><span>♡</span><b>No favorite templates yet</b><small>Tap the heart on any template.</small></div>'}else if(savedTab==='palettes'){const list=DB.getPalettes();r.innerHTML=list.length?`<div class="palette-grid">${list.map(p=>`<article class="palette-card"><button class="palette-swatches" data-apply-palette="${p.id}" style="border:0;width:100%;padding:0">${p.colors.map(c=>`<i style="background:${c}"></i>`).join('')}</button><small>${esc(p.name)}</small><button class="text-button" data-delete-palette="${p.id}">Delete</button></article>`).join('')}</div>`:'<div class="empty-state"><span>🎨</span><b>No saved palettes</b><small>Use Palette from Photo to make one.</small></div>'}else if(savedTab==='mytemplates'){const list=DB.getUserTemplates();r.innerHTML=list.length?`<div class="project-grid">${list.map(t=>`<article class="project-card"><button class="project-thumb" data-use-user-template="${t.id}" style="background:${bgStyle(t.bg)};border:0;width:100%"><span>${esc(t.title)}</span></button><div class="project-card-info"><strong>${esc(t.title)}</strong><small>${t.width} × ${t.height}</small></div><div class="project-card-actions"><button data-use-user-template="${t.id}">Use</button><button class="danger" data-delete-user-template="${t.id}">Delete</button></div></article>`).join('')}</div>`:'<div class="empty-state"><span>▧</span><b>No reusable templates yet</b><small>Save one from More inside the editor.</small></div>'}else{const s=DB.getSettings().myStyle||{font:'Georgia, serif',color:'#4b3740',bg:'#fff8fb'};r.innerHTML=`<div class="palette-card"><b>My Style</b><div style="font-family:${s.font};font-size:1.5rem;color:${s.color};padding:18px;border-radius:16px;background:${s.bg};margin-top:10px">little things ♡</div><button class="primary-button" style="margin-top:12px" data-action="my-style">Edit My Style</button></div>`}}
+function newProjectModal(){openModal(`${modalHead('New design','Start blank or choose a standard canvas.')}<div class="modal-grid">${Object.entries(T.FORMATS).map(([id,f])=>`<button class="modal-option" data-new-format="${id}"><b>${esc(f.label)}</b><small>${f.w} × ${f.h}</small></button>`).join('')}<button class="modal-option" data-new-format="custom"><b>Custom size</b><small>Your dimensions</small></button></div>`)}
+function customCanvasModal(){openModal(`${modalHead('Custom canvas','320–5000 px per side')}<div class="row"><div class="field"><label>Width</label><input id="customWidth" inputmode="numeric" value="1080"></div><div class="field"><label>Height</label><input id="customHeight" inputmode="numeric" value="1920"></div></div><button class="primary-button" style="width:100%;margin-top:16px;justify-content:center" id="createCustom">Create canvas</button>`)}
+function startFormat(format){if(format==='custom')return customCanvasModal();E.createProject(format);DB.saveSettings({lastFormat:format});route('editor')}
+function useTemplate(id){E.createFromTemplate(id);route('editor')}
+function useUserTemplate(id){const t=DB.getUserTemplates().find(x=>x.id===id);if(!t)return;const p=T.newProject('portrait',t.title);Object.assign(p,{width:t.width,height:t.height,bg:DB.clone(t.bg),objects:DB.clone(t.objects).map(o=>({...o,id:DB.uid('obj')})),drawings:DB.clone(t.drawings||[]).map(s=>({...s,id:DB.uid('stroke')}))});DB.upsertProject(p);E.setProject(p);route('editor')}
+const phead=t=>`<div class="panel-title"><h3>${esc(t)}</h3><button class="panel-close" data-panel-close>×</button></div>`;
+function fontOptions(value){const base=[['Georgia, serif','Serif'],['system-ui','Clean'],['Courier New, monospace','Typewriter'],['Trebuchet MS, sans-serif','Rounded']],custom=DB.getFonts().map(f=>[f.family,f.name]);return [...base,...custom].map(([v,n])=>`<option value="${esc(v)}" ${v===value?'selected':''}>${esc(n)}</option>`).join('')}
+function renderPanel(){const o=E.selected();if(tool==='add')pc.innerHTML=`${phead('Add')}<div class="tool-grid"><button class="tool-tile" data-paction="add-photo"><span>▧</span><small>Photo / Video</small></button><button class="tool-tile" data-paction="add-text"><span>Aa</span><small>Text</small></button><button class="tool-tile" data-paction="placeholder"><span>□</span><small>Photo frame</small></button><button class="tool-tile" data-paction="shape"><span>○</span><small>Shape</small></button><button class="tool-tile" data-paction="tape"><span>▱</span><small>Washi tape</small></button></div>`;
+else if(tool==='text')pc.innerHTML=`${phead('Text')}<div class="button-row">${T.QUICK_TEXT.map(x=>`<button data-quick-text="${esc(x)}">${esc(x)}</button>`).join('')}</div>${o?.type==='text'?`<div class="control-grid" style="margin-top:10px"><div class="control full"><label>Text</label><textarea data-object-prop="text">${esc(o.text)}</textarea></div><div class="control"><label>Font</label><select data-object-prop="font">${fontOptions(o.font)}</select></div><div class="control"><label>Size</label><input type="number" min="12" max="500" data-object-prop="fontSize" data-number value="${Math.round(o.fontSize||60)}"></div><div class="control"><label>Color</label><input type="color" data-object-prop="color" value="${o.color||'#4b3740'}"></div><div class="control"><label>Effect</label><select data-object-prop="effect"><option value="none">None</option><option value="outline">Outline</option><option value="shadow">Shadow</option><option value="glow">Glow</option><option value="highlight">Highlight</option><option value="sticker">Sticker</option></select></div><div class="control"><label>Alignment</label><select data-object-prop="align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div><div class="control"><label>Letter spacing</label><input type="number" data-object-prop="letterSpacing" data-number value="${o.letterSpacing||0}"></div></div><div class="button-row" style="margin-top:9px"><button data-paction="bold">Bold</button><button data-paction="italic">Italic</button><button data-paction="custom-font">Import font</button><button data-paction="apply-style">My Style</button></div>`:'<div class="empty-state"><b>Select a text layer</b><small>Or tap a preset above to add one.</small></div>'}`;
+else if(tool==='media')pc.innerHTML=`${phead('Photo & Video')}${o&&['image','video','placeholder'].includes(o.type)?`<div class="button-row"><button data-paction="replace-media">Replace</button><button data-paction="rotate90">90°</button><button data-paction="flip-x">Flip H</button><button data-paction="flip-y">Flip V</button></div><div class="button-row" style="margin-top:8px">${['none','soft','film','digicam','warm','fade','bw'].map(f=>`<button class="${o.filterPreset===f?'active':''}" data-filter="${f}">${f}</button>`).join('')}</div><div class="control-grid" style="margin-top:10px"><div class="control"><label>Fit</label><select data-object-prop="fit"><option value="cover">Fill frame</option><option value="contain">Fit inside</option></select></div><div class="control"><label>Corner radius</label><input type="number" min="0" max="500" data-object-prop="radius" data-number value="${o.radius||0}"></div><div class="control"><label>Brightness</label><input type="range" min=".5" max="1.5" step=".02" data-object-prop="brightness" data-number value="${o.brightness??1}"></div><div class="control"><label>Contrast</label><input type="range" min=".5" max="1.5" step=".02" data-object-prop="contrast" data-number value="${o.contrast??1}"></div><div class="control"><label>Saturation</label><input type="range" min="0" max="2" step=".02" data-object-prop="saturation" data-number value="${o.saturation??1}"></div><div class="control"><label>Photo focus X</label><input type="range" min="0" max="100" step="1" data-object-prop="focusX" data-number value="${o.focusX??50}"></div></div>`:'<div class="empty-state"><b>Select a photo or video</b><small>Media controls will appear here.</small></div>'}`;
+else if(tool==='stickers')pc.innerHTML=`${phead('Decor')}<div class="decor-grid">${T.STICKERS.map(s=>`<button data-sticker="${esc(s)}">${s}</button>`).join('')}</div><div class="button-row" style="margin-top:12px">${T.TAPE_COLORS.map(c=>`<button data-tape="${c}" style="background:${c}">Washi tape</button>`).join('')}</div>`;
+else if(tool==='draw')pc.innerHTML=`${phead('Draw')}<div class="button-row">${['pen','marker','highlighter','crayon','eraser'].map(b=>`<button class="${E.state.draw.brush===b?'active':''}" data-brush="${b}">${b}</button>`).join('')}</div><div class="control-grid" style="margin-top:10px"><div class="control"><label>Color</label><input type="color" data-draw-prop="color" value="${E.state.draw.color}"></div><div class="control"><label>Width</label><input type="range" min="2" max="70" data-draw-prop="width" data-number value="${E.state.draw.width}"></div></div><div class="button-row" style="margin-top:10px"><button data-paction="clear-drawing">Clear drawing</button><button data-paction="stop-drawing">Done drawing</button></div>`;
+else if(tool==='style'){const s=DB.getSettings();pc.innerHTML=`${phead('Canvas Style')}<div class="swatch-row">${['#fffdfd','#fff8fb','#fdeef4','#f1e8fb','#f8f1e4','#1f1d1e'].map(c=>`<button class="swatch" data-bg-color="${c}" style="background:${c}"></button>`).join('')}</div><div class="button-row" style="margin-top:9px"><button data-bg-pattern="notebook">Notebook</button><button data-bg-pattern="dots">Dots</button><button data-bg-pattern="grid">Grid paper</button><button data-bg-gradient="pink">Pink gradient</button><button data-bg-gradient="lavender">Lavender</button></div><div style="margin-top:12px"><label class="toggle-row"><span>Snap to center</span><input type="checkbox" data-setting="snap" ${s.snap?'checked':''}></label><label class="toggle-row"><span>Keep objects inside canvas</span><input type="checkbox" data-setting="keepInside" ${s.keepInside?'checked':''}></label><label class="toggle-row"><span>Instagram safe zones</span><input type="checkbox" data-setting="safeZones" ${s.safeZones?'checked':''}></label><label class="toggle-row"><span>Grid overlay</span><input type="checkbox" data-setting="grid" ${s.grid?'checked':''}></label></div>`}
+else if(tool==='layers'){const a=[...(E.getProject()?.objects||[])].reverse();pc.innerHTML=`${phead('Layers')}<div class="layer-list">${a.length?a.map(o=>`<div class="layer-row ${o.id===E.state.selectedId?'selected-layer':''}"><button class="layer-main" data-layer-select="${o.id}"><strong>${esc(E.objectLabel(o))}</strong><small>${esc(o.type)}</small></button><div class="layer-actions"><button data-layer-visible="${o.id}">${o.visible===false?'○':'◉'}</button><button data-layer-lock="${o.id}">${o.locked?'🔒':'🔓'}</button><button data-layer-up="${o.id}">↑</button><button data-layer-down="${o.id}">↓</button></div></div>`).join(''):'<div class="empty-state"><b>No layers yet</b><small>Add text, photos, shapes, or decor.</small></div>'}</div>`}
+else{const o=E.selected();pc.innerHTML=`${phead('More')}<div class="tool-grid"><button class="tool-tile" data-paction="save-template"><span>▧</span><small>Save as Template</small></button><button class="tool-tile" data-paction="resize"><span>↔</span><small>Resize Canvas</small></button><button class="tool-tile" data-paction="fit"><span>⌗</span><small>Fit Canvas</small></button></div>${o?`<div class="control-grid" style="margin-top:12px"><div class="control"><label>X</label><input type="number" data-object-prop="x" data-number value="${Math.round(o.x)}"></div><div class="control"><label>Y</label><input type="number" data-object-prop="y" data-number value="${Math.round(o.y)}"></div><div class="control"><label>Width</label><input type="number" data-object-prop="w" data-number value="${Math.round(o.w)}"></div><div class="control"><label>Height</label><input type="number" data-object-prop="h" data-number value="${Math.round(o.h)}"></div><div class="control"><label>Rotation</label><input type="number" data-object-prop="rotation" data-number value="${Math.round(o.rotation||0)}"></div><div class="control"><label>Opacity</label><input type="range" min="0" max="1" step=".02" data-object-prop="opacity" data-number value="${o.opacity??1}"></div></div>`:''}`}}
+function openPanel(name){tool=name;$$('#editorToolbar button').forEach(b=>b.classList.toggle('active',b.dataset.tool===name));panel.classList.add('open');panel.setAttribute('aria-hidden','false');if(name==='draw')E.setDrawMode(true);else if(E.state.draw.enabled)E.setDrawMode(false);renderPanel()}
+function closePanel(){panel.classList.remove('open');panel.setAttribute('aria-hidden','true');E.setDrawMode(false)}
+function renameModal(){const p=E.getProject();openModal(`${modalHead('Rename project')}<div class="field"><label>Name</label><input id="renameInput" maxlength="80" value="${esc(p.name||'Untitled')}"></div><button class="primary-button" style="width:100%;margin-top:14px;justify-content:center" id="confirmRename">Save name</button>`)}
+function resizeModal(){const p=E.getProject();openModal(`${modalHead('Resize canvas','Existing layers scale with the canvas.')}<div class="row"><div class="field"><label>Width</label><input id="resizeW" inputmode="numeric" value="${p.width}"></div><div class="field"><label>Height</label><input id="resizeH" inputmode="numeric" value="${p.height}"></div></div><button class="primary-button" style="width:100%;margin-top:14px;justify-content:center" id="confirmResize">Resize</button>`)}
+function styleModal(){const s=DB.getSettings().myStyle||{font:'Georgia, serif',color:'#4b3740',bg:'#fff8fb'};openModal(`${modalHead('My Style','Save a favorite font and colors to reuse.')}<div class="field"><label>Font</label><select id="styleFont">${fontOptions(s.font)}</select></div><div class="row"><div class="field"><label>Text color</label><input id="styleColor" type="color" value="${s.color}"></div><div class="field"><label>Background</label><input id="styleBg" type="color" value="${s.bg}"></div></div><button class="primary-button" style="width:100%;margin-top:14px;justify-content:center" id="saveStyle">Save My Style</button>`)}
+function settingsModal(){const s=DB.getSettings();openModal(`${modalHead('Editor Settings','Saved on this device.')}<label class="toggle-row"><span>Snap to center</span><input type="checkbox" data-modal-setting="snap" ${s.snap?'checked':''}></label><label class="toggle-row"><span>Keep objects inside canvas</span><input type="checkbox" data-modal-setting="keepInside" ${s.keepInside?'checked':''}></label><label class="toggle-row"><span>Instagram safe zones</span><input type="checkbox" data-modal-setting="safeZones" ${s.safeZones?'checked':''}></label><label class="toggle-row"><span>Reduce motion</span><input type="checkbox" data-modal-setting="reducedMotion" ${s.reducedMotion?'checked':''}></label>`)}
+function exportModal(){const q=DB.getSettings().exportQuality||.94;openModal(`${modalHead('Export','Rendered at the project’s full canvas size.')}<div class="field"><label>Quality</label><input id="exportQuality" type="range" min=".72" max="1" step=".02" value="${q}"></div><label class="toggle-row"><span>Use iPhone share sheet when available</span><input id="exportShare" type="checkbox" checked></label><div class="modal-grid"><button class="modal-option" data-export-format="png"><b>PNG</b><small>Best for graphics</small></button><button class="modal-option" data-export-format="jpg"><b>JPG</b><small>Smaller photo file</small></button><button class="modal-option" data-export-format="webp"><b>WebP</b><small>Modern compact image</small></button></div>`)}
+function whatsNew(){openModal(`${modalHead('What’s New · 1.0.0','Washi Creative Studio release')}<div class="field"><p>• Full mobile canvas editor<br>• Photo, video, text, shapes, stickers and drawing<br>• 26 editable templates<br>• Photo dump generator and palette extraction<br>• Layers, snapping, safe zones, undo/redo and autosave<br>• PNG, JPG and WebP export<br>• Local-first projects and custom fonts<br>• Page pinch/double-tap zoom disabled</p></div>`)}
+function safeZonesInfo(){openModal(`${modalHead('Instagram Safe Zones','Guides help keep important text away from interface overlays.')}<p>Turn on <b>Instagram safe zones</b> in Style or Settings. The guides are editor-only and are never exported.</p>`)}
+function funTextModal(){openModal(`${modalHead('Fun Text','Choose a prompt to start a blank Story.')}<div class="modal-grid">${T.QUICK_TEXT.map(x=>`<button class="modal-option" data-fun-text="${esc(x)}"><b>${esc(x)}</b><small>Editable text story</small></button>`).join('')}</div>`)}
+function action(name){if(name==='new-project')return newProjectModal();if(name==='photo-dump')return $('#photoDumpInput').click();if(name==='palette')return $('#paletteInput').click();if(name==='fun-text')return funTextModal();if(name==='my-style')return styleModal();if(name==='safe-zones')return safeZonesInfo();if(name==='settings')return settingsModal();if(name==='whats-new')return whatsNew()}
+function panelAction(name){if(name==='add-photo'){replaceMedia=false;return $('#mediaInput').click()}if(name==='add-text'){E.addText('Text');tool='text';return renderPanel()}if(name==='placeholder'){E.addPlaceholder();return renderPanel()}if(name==='shape'){E.addShape('rect');return renderPanel()}if(name==='tape'){E.addTape(T.TAPE_COLORS[0]);return renderPanel()}if(name==='replace-media'){replaceMedia=true;return $('#mediaInput').click()}if(name==='rotate90'){E.rotate90();return renderPanel()}if(name==='flip-x'){const o=E.selected();if(o)E.updateSelected({flipX:!o.flipX});return renderPanel()}if(name==='flip-y'){const o=E.selected();if(o)E.updateSelected({flipY:!o.flipY});return renderPanel()}if(name==='bold'){const o=E.selected();if(o)E.updateSelected({bold:!o.bold});return renderPanel()}if(name==='italic'){const o=E.selected();if(o)E.updateSelected({italic:!o.italic});return renderPanel()}if(name==='custom-font')return $('#fontInput').click();if(name==='apply-style'){const s=DB.getSettings().myStyle,o=E.selected();if(s&&o?.type==='text'){E.updateSelected({font:s.font,color:s.color});say('My Style applied')}return}if(name==='clear-drawing'){E.clearDrawings();return renderPanel()}if(name==='stop-drawing'){E.setDrawMode(false);return closePanel()}if(name==='save-template'){const item=DB.saveUserTemplate(E.getProject());say(`Saved “${item.title}” as a template`);return}if(name==='resize')return resizeModal();if(name==='fit')return E.fit()}
+function liveProperty(input){const key=input.dataset.objectProp;if(!key)return;let value=input.value;if(input.dataset.number!==undefined)value=Number(value);if(key==='filterPreset')value=String(value);E.updateSelected({[key]:value,filterPreset:['brightness','contrast','saturation'].includes(key)?'custom':E.selected()?.filterPreset},{history:false,rerender:true,persist:false});clearTimeout(propertyTimer);propertyTimer=setTimeout(()=>E.save(),260)}
+async function makeDump(files){E.createProject('dump','Photo Dump');route('editor');const added=await E.addMedia(files);const p=E.getProject(),n=added.length,cols=n<=2?1:n<=6?2:3,gap=28,cellW=(p.width-gap*(cols+1))/cols,rows=Math.ceil(n/cols),cellH=(p.height-gap*(rows+1))/rows;added.forEach((o,i)=>{o.x=gap+(i%cols)*(cellW+gap);o.y=gap+Math.floor(i/cols)*(cellH+gap);o.w=cellW;o.h=cellH;o.radius=22;o.rotation=n>4?(i%2?2:-2):0});E.render();E.save();say(`${n} photo${n===1?'':'s'} arranged`)}
+async function extractPalette(file){const bitmap=await createImageBitmap(file),c=document.createElement('canvas');c.width=c.height=48;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(bitmap,0,0,48,48);bitmap.close();const d=x.getImageData(0,0,48,48).data,buckets=new Map();for(let i=0;i<d.length;i+=16){if(d[i+3]<180)continue;const r=Math.round(d[i]/32)*32,g=Math.round(d[i+1]/32)*32,b=Math.round(d[i+2]/32)*32,key=`${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)}`;buckets.set(key,(buckets.get(key)||0)+1)}return [...buckets.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(([v])=>`#${v.split(',').map(n=>(+n).toString(16).padStart(2,'0')).join('')}`)}
+document.addEventListener('click',async e=>{if(e.target.closest('#menuButton'))return openDrawer();if(e.target.closest('[data-close-drawer]'))return closeDrawer();if(e.target.closest('[data-close-modal]'))return closeModal();if(e.target.closest('[data-panel-close]'))return closePanel();const routeBtn=e.target.closest('[data-route]');if(routeBtn)return route(routeBtn.dataset.route);const act=e.target.closest('[data-action]');if(act)return action(act.dataset.action);const format=e.target.closest('[data-format]');if(format)return startFormat(format.dataset.format);const nf=e.target.closest('[data-new-format]');if(nf)return startFormat(nf.dataset.newFormat);if(e.target.id==='createCustom'){const p=T.newProject('story','Untitled Custom');p.width=Math.max(320,Math.min(5000,+$('#customWidth').value||1080));p.height=Math.max(320,Math.min(5000,+$('#customHeight').value||1920));DB.upsertProject(p);E.setProject(p);return route('editor')}const cat=e.target.closest('[data-template-category]');if(cat){category=cat.dataset.templateCategory;return renderTemplates()}const fav=e.target.closest('[data-favorite-template]');if(fav){e.stopPropagation();DB.toggleTemplateFavorite(fav.dataset.favoriteTemplate);renderTemplates();renderHome();return}const template=e.target.closest('[data-template-id]');if(template&&!e.target.closest('[data-favorite-template]'))return useTemplate(template.dataset.templateId);const open=e.target.closest('[data-open-project]');if(open){E.openProject(open.dataset.openProject);return route('editor')}const pa=e.target.closest('[data-project-action]');if(pa){if(pa.dataset.projectAction==='duplicate'){DB.duplicateProject(pa.dataset.id);say('Project duplicated')}else if(confirm('Delete this project?'))DB.deleteProject(pa.dataset.id);renderProjects();renderHome();return}const st=e.target.closest('[data-saved]');if(st){savedTab=st.dataset.saved;return renderSaved()}const apply=e.target.closest('[data-apply-palette]');if(apply){const p=DB.getPalettes().find(x=>x.id===apply.dataset.applyPalette),s=DB.getSettings().myStyle||{};if(p)DB.saveSettings({myStyle:{...s,color:p.colors[3]||p.colors[0],bg:p.colors[0]}});say('Palette applied to My Style');return}const dp=e.target.closest('[data-delete-palette]');if(dp){DB.deletePalette(dp.dataset.deletePalette);return renderSaved()}const ut=e.target.closest('[data-use-user-template]');if(ut)return useUserTemplate(ut.dataset.useUserTemplate);const dut=e.target.closest('[data-delete-user-template]');if(dut){if(confirm('Delete this reusable template?'))DB.deleteUserTemplate(dut.dataset.deleteUserTemplate);return renderSaved()}const ft=e.target.closest('[data-fun-text]');if(ft){E.createProject('story','Text Story');E.addText(ft.dataset.funText);return route('editor')}if(e.target.closest('#exitEditor')){E.save();return route('home')}if(e.target.closest('#undoButton')){E.undo();return renderPanel()}if(e.target.closest('#redoButton')){E.redo();return renderPanel()}if(e.target.closest('#renameProject'))return renameModal();if(e.target.closest('#exportButton'))return exportModal();if(e.target.id==='confirmRename'){E.getProject().name=$('#renameInput').value.trim().slice(0,80)||'Untitled';E.render();E.save();closeModal();return say('Project renamed')}if(e.target.id==='confirmResize'){E.resizeProject(+$('#resizeW').value,+$('#resizeH').value);closeModal();return say('Canvas resized')}const ef=e.target.closest('[data-export-format]');if(ef){const q=+$('#exportQuality').value||.94,share=$('#exportShare').checked;DB.saveSettings({exportQuality:q});try{ef.disabled=true;const out=await X.exportProject(E.getProject(),{format:ef.dataset.exportFormat,quality:q,share});if(out.url)openModal(`${modalHead('Export ready','Tap the button below to save the file.')}<a class="primary-button" style="width:100%;justify-content:center;text-decoration:none" href="${out.url}" download="${esc(out.file.name)}">Save ${esc(out.file.name)}</a>`);else{closeModal();say('Export shared')}}catch(err){say(err?.name==='AbortError'?'Share cancelled':'Could not export')}finally{ef.disabled=false}return}const tb=e.target.closest('[data-tool]');if(tb)return panel.classList.contains('open')&&tool===tb.dataset.tool?closePanel():openPanel(tb.dataset.tool);const oa=e.target.closest('[data-object-action]');if(oa){const n=oa.dataset.objectAction;if(n==='duplicate')E.duplicateSelected();if(n==='fill'){replaceMedia=true;$('#mediaInput').click();return}if(n==='rotate90')E.rotate90();if(n==='center')E.centerSelected();if(n==='front')E.bringForward();if(n==='back')E.sendBackward();if(n==='lock')E.toggleLock();if(n==='delete'&&confirm('Delete this layer?'))E.deleteSelected();return renderPanel()}const ca=e.target.closest('[data-canvas-action]');if(ca){if(ca.dataset.canvasAction==='zoom-in')E.setZoom(E.state.zoom*1.15);if(ca.dataset.canvasAction==='zoom-out')E.setZoom(E.state.zoom/1.15);if(ca.dataset.canvasAction==='fit')E.fit();return}const px=e.target.closest('[data-paction]');if(px)return panelAction(px.dataset.paction);const qt=e.target.closest('[data-quick-text]');if(qt){E.addText(qt.dataset.quickText);tool='text';return renderPanel()}const sk=e.target.closest('[data-sticker]');if(sk)return E.addSticker(sk.dataset.sticker);const tape=e.target.closest('[data-tape]');if(tape)return E.addTape(tape.dataset.tape);const filter=e.target.closest('[data-filter]');if(filter){E.updateSelected({filterPreset:filter.dataset.filter});return renderPanel()}const brush=e.target.closest('[data-brush]');if(brush){E.setDrawMode(true,{brush:brush.dataset.brush});return renderPanel()}const color=e.target.closest('[data-bg-color]');if(color)return E.setBackground({type:'solid',value:color.dataset.bgColor});const pattern=e.target.closest('[data-bg-pattern]');if(pattern)return E.setBackground({type:'pattern',value:pattern.dataset.bgPattern,color:'#fffaf5'});const gradient=e.target.closest('[data-bg-gradient]');if(gradient)return E.setBackground({type:'gradient',value:gradient.dataset.bgGradient==='lavender'?'linear-gradient(145deg,#fff9fc,#eee5ff)':'linear-gradient(145deg,#fff8fb,#f7c4d4)'});const ls=e.target.closest('[data-layer-select]');if(ls){E.select(ls.dataset.layerSelect);return renderPanel()}const lv=e.target.closest('[data-layer-visible]');if(lv){E.toggleVisible(lv.dataset.layerVisible);return renderPanel()}const ll=e.target.closest('[data-layer-lock]');if(ll){E.select(ll.dataset.layerLock);E.toggleLock();return renderPanel()}const lu=e.target.closest('[data-layer-up]');if(lu){E.moveLayer(lu.dataset.layerUp,1);return renderPanel()}const ld=e.target.closest('[data-layer-down]');if(ld){E.moveLayer(ld.dataset.layerDown,-1);return renderPanel()}if(e.target.id==='saveStyle'){DB.saveSettings({myStyle:{font:$('#styleFont').value,color:$('#styleColor').value,bg:$('#styleBg').value}});closeModal();renderSaved();return say('My Style saved')}});
+document.addEventListener('input',e=>{if(e.target.matches('[data-object-prop]'))liveProperty(e.target);if(e.target.matches('[data-draw-prop]')){let v=e.target.value;if(e.target.dataset.number!==undefined)v=+v;E.setDrawMode(true,{[e.target.dataset.drawProp]:v})}if(e.target.id==='templateSearch')renderTemplates();if(e.target.id==='projectSearch')renderProjects()});
+document.addEventListener('change',e=>{if(e.target.matches('[data-setting]')){DB.saveSettings({[e.target.dataset.setting]:e.target.checked});E.render();renderPanel()}if(e.target.matches('[data-modal-setting]'))DB.saveSettings({[e.target.dataset.modalSetting]:e.target.checked});if(e.target.id==='projectSort')renderProjects()});
+$('#mediaInput').addEventListener('change',async e=>{const files=[...e.target.files];if(!files.length)return;try{if(replaceMedia&&E.selected()&&E.selected().type!=='placeholder')await E.replaceSelectedMedia(files[0]);else await E.addMedia(files,{replaceSelected:replaceMedia});renderPanel();say(replaceMedia?'Media replaced':'Media added')}catch(err){say(err?.name==='QuotaExceededError'?'Not enough local storage':'Could not add media')}finally{replaceMedia=false;e.target.value=''}});
+$('#photoDumpInput').addEventListener('change',async e=>{const files=[...e.target.files].slice(0,12);if(files.length)try{await makeDump(files)}catch{say('Could not build photo dump')}e.target.value=''});
+$('#paletteInput').addEventListener('change',async e=>{const file=e.target.files[0];if(file)try{DB.savePalette(await extractPalette(file),file.name.replace(/\.[^.]+$/,''));savedTab='palettes';route('saved');say('Palette saved')}catch{say('Could not read photo')}e.target.value=''});
+$('#fontInput').addEventListener('change',async e=>{const file=e.target.files[0];if(file)try{const f=await DB.addFont(file);say(`${f.name} imported`);renderPanel()}catch{say('Could not import font')}e.target.value=''});
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});let lastTouch=0,lastTarget=null;document.addEventListener('touchend',e=>{const now=Date.now();if(e.target===lastTarget&&now-lastTouch<300&&!e.target.closest('input,textarea,select'))e.preventDefault();lastTouch=now;lastTarget=e.target},{passive:false});
+window.addEventListener('washi:selection-changed',()=>panel.classList.contains('open')&&renderPanel());window.addEventListener('washi:project-saved',()=>{renderHome();renderProjects()});document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?E.redo():E.undo()}if(e.key==='Escape'){if(modal.classList.contains('open'))closeModal();else if(drawer.classList.contains('open'))closeDrawer();else if($('#editorView').classList.contains('active'))route('home')}});
+async function init(){await DB.loadFonts();E.bind();renderHome();renderTemplates();renderProjects();renderSaved();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+init();
 })();
