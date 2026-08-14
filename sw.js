@@ -1,3 +1,3 @@
-const CACHE_NAME = 'washi-shell-r15-clean';
+const CACHE_NAME = 'washi-shell-v1.0';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
