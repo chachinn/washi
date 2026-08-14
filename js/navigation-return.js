@@ -2,87 +2,80 @@
 'use strict';
 
 const W=window.Washi||{},E=W.Editor;
-const $=(s,r=document)=>r.querySelector(s);
-let origin={route:'home',scrollY:0,templateSearch:'',templateCategory:'All',chipScroll:0};
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const KEY='washi:return-state:r16';
+let origin={route:'home',scrollY:0};
+
+try{
+  const saved=JSON.parse(sessionStorage.getItem(KEY)||'null');
+  if(saved&&saved.route)origin=saved;
+}catch{}
 
 function activeRoute(){
-  const view=$('.view.active');
-  return view?.dataset.view&&view.dataset.view!=='editor'?view.dataset.view:null;
+  const route=$('.view.active')?.dataset.view;
+  return route&&route!=='editor'?route:null;
 }
 function rememberOrigin(){
   const route=activeRoute();
   if(!route)return;
-  origin={
-    route,
-    scrollY:Math.max(0,window.scrollY||window.pageYOffset||0),
-    templateSearch:$('#templateSearch')?.value||'',
-    templateCategory:$('#templateChips .chip.active')?.dataset.templateCategory||'All',
-    chipScroll:$('#templateChips')?.scrollLeft||0
-  };
-}
-function routeButton(route){
-  return $(`#bottomNav [data-route="${route}"]`)||$(`[data-route="${route}"]`);
-}
-function restoreTemplateState(state){
-  if(state.route!=='templates')return;
-  const search=$('#templateSearch');
-  if(search&&search.value!==state.templateSearch){
-    search.value=state.templateSearch;
-    search.dispatchEvent(new Event('input',{bubbles:true}));
-  }
-  const chip=$(`#templateChips [data-template-category="${CSS.escape(state.templateCategory||'All')}"]`);
-  if(chip&&!chip.classList.contains('active'))chip.click();
-  const chips=$('#templateChips');
-  if(chips)chips.scrollLeft=state.chipScroll||0;
-}
-function restoreScroll(state){
-  const top=Math.max(0,state.scrollY||0);
-  window.scrollTo({top,behavior:'auto'});
-  requestAnimationFrame(()=>window.scrollTo({top,behavior:'auto'}));
-  setTimeout(()=>window.scrollTo({top,behavior:'auto'}),80);
-}
-function leaveEditor(){
-  const state={...origin};
-  try{E?.save?.()}catch(err){console.warn('Washi navigation save skipped',err)}
-  const button=routeButton(state.route)||routeButton('home');
-  if(!button)return;
-  button.click();
-  requestAnimationFrame(()=>{
-    restoreTemplateState(state);
-    restoreScroll(state);
-  });
+  origin={route,scrollY:Math.max(0,window.scrollY||window.pageYOffset||0),savedAt:Date.now()};
+  try{sessionStorage.setItem(KEY,JSON.stringify(origin))}catch{}
 }
 function isEditorEntry(target){
+  if(!target||target.closest('[data-favorite-template]'))return false;
   return !!target.closest([
     '[data-template-id]',
     '[data-open-project]',
     '[data-use-user-template]',
     '[data-fun-text]',
-    '[data-format]',
     '[data-new-format]',
     '#createCustom',
     '[data-action="auto-dump"]',
     '[data-action="photo-dump"]'
   ].join(','));
 }
+function closeEditorChrome(){
+  const panel=$('#editorPanel'),modal=$('#modal'),drawer=$('#drawer');
+  panel?.classList.remove('open');
+  panel?.setAttribute('aria-hidden','true');
+  modal?.classList.remove('open');
+  modal?.setAttribute('aria-hidden','true');
+  drawer?.classList.remove('open');
+  drawer?.setAttribute('aria-hidden','true');
+  document.body.classList.remove('modal-open');
+  E?.setDrawMode?.(false);
+}
+function restoreOrigin(){
+  const route=['home','templates','projects','saved'].includes(origin.route)?origin.route:'home';
+  closeEditorChrome();
+  $$('.view').forEach(view=>view.classList.toggle('active',view.dataset.view===route));
+  $$('.nav-item').forEach(item=>item.classList.toggle('active',item.dataset.route===route));
+  const top=Math.max(0,Number(origin.scrollY)||0);
+  requestAnimationFrame(()=>{
+    window.scrollTo({top,left:0,behavior:'auto'});
+    requestAnimationFrame(()=>window.scrollTo({top,left:0,behavior:'auto'}));
+  });
+}
+function leaveEditor(event){
+  if(!$('#editorView')?.classList.contains('active'))return;
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  event?.stopImmediatePropagation?.();
+  try{E?.save?.()}catch(err){console.warn('Washi navigation save skipped',err)}
+  restoreOrigin();
+}
 
 document.addEventListener('click',event=>{
-  if(event.target.closest('#exitEditor')&&$('#editorView')?.classList.contains('active')){
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    leaveEditor();
-    return;
-  }
   if(isEditorEntry(event.target))rememberOrigin();
+  if(event.target.closest('#exitEditor'))leaveEditor(event);
 },true);
 
 document.addEventListener('keydown',event=>{
   if(event.key!=='Escape'||!$('#editorView')?.classList.contains('active'))return;
   if($('#modal')?.classList.contains('open')||$('#drawer')?.classList.contains('open'))return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  leaveEditor();
+  leaveEditor(event);
 },true);
 
-W.NavigationReturn={rememberOrigin,leaveEditor,getOrigin:()=>({...origin}),version:'2026.08.14-r16'};
+window.addEventListener('pagehide',()=>{if(activeRoute())rememberOrigin()});
+W.NavigationReturn={rememberOrigin,restoreOrigin,getOrigin:()=>({...origin}),version:'2026.08.14-r16'};
 })();
