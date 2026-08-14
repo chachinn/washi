@@ -41,7 +41,7 @@ jobs:
           new_marker = r"""const AUTO_SW=1080,AUTO_SH=1350,AUTO_MAX=60;
           function autoSlideGroups(total,maxSlides){
             const slides=Math.min(maxSlides,Math.max(2,Math.ceil(total/4))),base=Math.floor(total/slides),rem=total%slides,a=Array.from({length:slides},(_,i)=>base+(i<rem?1:0));
-            if(slides>2&&a[0]===a[1]&&a[0]>2){a[0]++;a[1]--}return a;
+            if(slides>2&&a[0]===a[1]&&a[0]>2&&a[0]<8){a[0]++;a[1]--}return a;
           }
           function autoSlideStyle(o,slide,index){
             if(slide%2===1)o.x=AUTO_SW-o.x-o.w;
@@ -112,7 +112,7 @@ jobs:
           test "$(git diff --name-only | sort | tr '\n' ' ')" = "app.js index.html manifest.json sw.js "
 
           node <<'NODE'
-          function groups(total,maxSlides){const slides=Math.min(maxSlides,Math.max(2,Math.ceil(total/4))),base=Math.floor(total/slides),rem=total%slides,a=Array.from({length:slides},(_,i)=>base+(i<rem?1:0));if(slides>2&&a[0]===a[1]&&a[0]>2){a[0]++;a[1]--}return a}
+          function groups(total,maxSlides){const slides=Math.min(maxSlides,Math.max(2,Math.ceil(total/4))),base=Math.floor(total/slides),rem=total%slides,a=Array.from({length:slides},(_,i)=>base+(i<rem?1:0));if(slides>2&&a[0]===a[1]&&a[0]>2&&a[0]<8){a[0]++;a[1]--}return a}
           for(let n=13;n<=24;n++){const a=groups(n,6);if(a.reduce((x,y)=>x+y,0)!==n||a.length>6||a.some(x=>x<1||x>8))process.exit(1)}
           for(let n=25;n<=60;n++){const a=groups(n,8);if(a.reduce((x,y)=>x+y,0)!==n||a.length>8||a.some(x=>x<1||x>8))process.exit(1)}
           console.log('Auto Dump grouping QA passed 13–60 photos')
