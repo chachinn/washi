@@ -1,0 +1,24 @@
+'use strict';
+const LIB='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs';
+const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
+const MODEL='https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite';
+let segmenterPromise=null;
+async function getSegmenter(){
+  if(segmenterPromise)return segmenterPromise;
+  segmenterPromise=(async()=>{
+    const {FilesetResolver,ImageSegmenter}=await import(LIB);
+    const vision=await FilesetResolver.forVisionTasks(WASM);
+    return ImageSegmenter.createFromOptions(vision,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},runningMode:'IMAGE',outputCategoryMask:false,outputConfidenceMasks:true});
+  })();
+  try{return await segmenterPromise}catch(err){segmenterPromise=null;throw err}
+}
+self.onmessage=async e=>{
+  const {type,id,bitmap}=e.data||{};if(type!=='segment'||!id||!bitmap)return;
+  try{
+    const segmenter=await getSegmenter(),result=segmenter.segment(bitmap);bitmap.close?.();
+    const person=result.confidenceMasks?.[1]||result.confidenceMasks?.[0];if(!person)throw Error('No person mask returned');
+    const width=person.width,height=person.height,src=person.getAsFloat32Array(),mask=new Float32Array(src.length);mask.set(src);
+    result.confidenceMasks?.forEach(m=>m.close?.());result.categoryMask?.close?.();
+    self.postMessage({type:'result',id,width,height,mask:mask.buffer},[mask.buffer]);
+  }catch(err){try{bitmap.close?.()}catch{}self.postMessage({type:'error',id,error:String(err?.message||err||'Segmentation failed')})}
+};
