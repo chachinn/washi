@@ -1,0 +1,140 @@
+name: Apply Washi r12
+
+on:
+  push:
+    branches:
+      - agent/washi-r12-photo-dump-video
+    paths:
+      - .github/workflows/apply-r12.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/washi-r12-photo-dump-video
+          fetch-depth: 0
+
+      - name: Apply r12 changes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_exact(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f"Expected source not found in {path}")
+              p.write_text(text.replace(old, new, 1))
+
+          replace_exact(
+              "app.js",
+              "function startFormat(format){if(format==='custom')return customCanvasModal();E.createProject(format);DB.saveSettings({lastFormat:format});route('editor')}",
+              "function startFormat(format){if(format==='custom')return customCanvasModal();if(format==='dump'){DB.saveSettings({lastFormat:'dump'});return $('#photoDumpInput').click()}E.createProject(format);DB.saveSettings({lastFormat:format});route('editor')}"
+          )
+
+          replace_exact(
+              "app.js",
+              "async function makeDump(files){E.createProject('dump','Photo Dump');route('editor');const added=await E.addMedia(files);const p=E.getProject(),n=added.length,cols=n<=2?1:n<=6?2:3,gap=28,cellW=(p.width-gap*(cols+1))/cols,rows=Math.ceil(n/cols),cellH=(p.height-gap*(rows+1))/rows;added.forEach((o,i)=>{o.x=gap+(i%cols)*(cellW+gap);o.y=gap+Math.floor(i/cols)*(cellH+gap);o.w=cellW;o.h=cellH;o.radius=22;o.rotation=n>4?(i%2?2:-2):0});E.render();E.save();say(`${n} photo${n===1?'':'s'} arranged`)}",
+              """function dumpRects(n,w,h){
+  const m=34,g=18,W=w-m*2,H=h-m*2,R=(x,y,rw,rh)=>({x:m+x,y:m+y,w:rw,h:rh});
+  if(n<=1)return[R(0,0,W,H)];
+  if(n===2){const cw=(W-g)/2;return[R(0,0,cw,H),R(cw+g,0,cw,H)]}
+  if(n===3){const lw=Math.round(W*.58),rw=W-lw-g,rh=(H-g)/2;return[R(0,0,lw,H),R(lw+g,0,rw,rh),R(lw+g,rh+g,rw,rh)]}
+  if(n===4){const cw=(W-g)/2,rh=(H-g)/2;return[R(0,0,cw,rh),R(cw+g,0,cw,rh),R(0,rh+g,cw,rh),R(cw+g,rh+g,cw,rh)]}
+  if(n===5){const topH=Math.round(H*.47),lowerH=H-topH-g,cw=(W-g)/2,rh=(lowerH-g)/2,y1=topH+g,y2=y1+rh+g;return[R(0,0,W,topH),R(0,y1,cw,rh),R(cw+g,y1,cw,rh),R(0,y2,cw,rh),R(cw+g,y2,cw,rh)]}
+  const cols=n<=8?2:3,rows=Math.ceil(n/cols),rh=(H-g*(rows-1))/rows,a=[],fullRows=Math.floor(n/cols),rem=n%cols;
+  for(let r=0;r<fullRows;r++){const cw=(W-g*(cols-1))/cols;for(let c=0;c<cols;c++)a.push(R(c*(cw+g),r*(rh+g),cw,rh))}
+  if(rem){const y=fullRows*(rh+g),lastW=(W-g*(rem-1))/rem;for(let c=0;c<rem;c++)a.push(R(c*(lastW+g),y,lastW,rh))}return a;
+}
+function arrangePhotoDump(p=E.getProject(),objects=null,{save=true}={}){
+  if(!p)return[];const media=objects||p.objects.filter(o=>['image','video'].includes(o.type)&&!o.isPhotoBackground),n=media.length;if(!n)return[];
+  const rs=dumpRects(n,p.width,p.height);media.forEach((o,i)=>{const r=rs[i];Object.assign(o,{x:r.x,y:r.y,w:r.w,h:r.h,rotation:0,radius:n>=9?12:18,fit:'cover',focusX:o.focusX??50,focusY:o.focusY??50,mediaZoom:o.mediaZoom??1})});
+  if(save){E.render();E.save()}return media;
+}
+async function makeDump(files){E.createProject('dump','Photo Dump');route('editor');const added=await E.addMedia(files);const p=E.getProject();p.autoDumpLayout=true;arrangePhotoDump(p,added,{save:true});say(`${added.length} photo${added.length===1?'':'s'} auto-arranged`)}
+W.SmartPhotoDump={arrange:arrangePhotoDump,version:'2026.08.14-r12'};"""
+          )
+
+          replace_exact(
+              "js/background-photo.js",
+              "mediaInput?.addEventListener('change',async e=>{e.stopImmediatePropagation();const files=[...e.target.files];if(!files.length)return;try{const selected=E.selected?.();if(intent==='replace'&&selected&&selected.type!=='placeholder')await E.replaceSelectedMedia(files[0]);else if(selected?.type==='placeholder')await E.addMedia(files,{replaceSelected:true});else await E.addMedia(files,{replaceSelected:false});window.dispatchEvent(new CustomEvent('washi:selection-changed',{detail:{id:E.state.selectedId}}));toast(selected?.type==='placeholder'||intent==='slot'?'Photo added to frame':intent==='replace'?'Media replaced':'Media added')}catch(err){toast(err?.name==='QuotaExceededError'?'Not enough local storage':'Could not add media')}finally{intent='add';e.target.value=''}},true);",
+              "mediaInput?.addEventListener('change',async e=>{e.stopImmediatePropagation();const files=[...e.target.files];if(!files.length)return;try{const selected=E.selected?.(),addingLoose=intent==='add'&&!selected?.type?.includes?.('placeholder');if(intent==='replace'&&selected&&selected.type!=='placeholder')await E.replaceSelectedMedia(files[0]);else if(selected?.type==='placeholder')await E.addMedia(files,{replaceSelected:true});else await E.addMedia(files,{replaceSelected:false});const p=project();if(addingLoose&&files.length>1&&p?.format==='dump'&&W.SmartPhotoDump?.arrange){p.autoDumpLayout=true;W.SmartPhotoDump.arrange(p,null,{save:true});toast(`${files.length} photos auto-arranged`)}else{window.dispatchEvent(new CustomEvent('washi:selection-changed',{detail:{id:E.state.selectedId}}));toast(selected?.type==='placeholder'||intent==='slot'?'Photo added to frame':intent==='replace'?'Media replaced':'Media added')}}catch(err){toast(err?.name==='QuotaExceededError'?'Not enough local storage':'Could not add media')}finally{intent='add';e.target.value=''}},true);"
+          )
+
+          replace_exact(
+              "js/carousel.js",
+              "async function video(canvas,seconds,name,i){const type=mime();if(!type||!canvas.captureStream)throw Error('Timed video export is not supported by this browser');const snapshot=document.createElement('canvas');snapshot.width=canvas.width;snapshot.height=canvas.height;snapshot.getContext('2d').drawImage(canvas,0,0);const ctx=canvas.getContext('2d'),stream=canvas.captureStream(30),chunks=[],r=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:6000000});r.ondataavailable=e=>e.data.size&&chunks.push(e.data);const done=new Promise((res,rej)=>{r.onstop=res;r.onerror=()=>rej(r.error)});r.start(250);const start=performance.now(),ms=clamp(seconds,.5,60)*1000;await new Promise(res=>{function f(t){const k=Math.min(1,(t-start)/ms),s=1+.018*k,dx=canvas.width*(s-1)/2,dy=canvas.height*(s-1)/2;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.save();ctx.translate(-dx,-dy);ctx.scale(s,s);ctx.drawImage(snapshot,0,0);ctx.restore();t-start<ms?requestAnimationFrame(f):res()}requestAnimationFrame(f)});r.stop();await done;stream.getTracks().forEach(x=>x.stop());const ext=type.includes('mp4')?'mp4':'webm';return new File([new Blob(chunks,{type})],`${safe(name)}-${String(i+1).padStart(2,'0')}.${ext}`,{type})}\nasync function videos(q){const full=await X.renderProject(q),out=[];for(let i=0;i<q.carousel.slideCount;i++){toast(`Rendering video ${i+1}/${q.carousel.slideCount}`);out.push(await video(cut(full,i,q.carousel),q.carousel.durations[i]||3,q.name,i))}return out}",
+              """async function videoSequence(q){
+ const type=mime();if(!type)throw Error('Timed video export is not supported by this browser');
+ const full=await X.renderProject(q),canvas=document.createElement('canvas');canvas.width=q.carousel.slideWidth;canvas.height=q.carousel.slideHeight;
+ if(!canvas.captureStream)throw Error('Timed video export is not supported by this browser');
+ const ctx=canvas.getContext('2d',{alpha:false}),stream=canvas.captureStream(30),chunks=[],recorder=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:6000000});
+ recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+ const done=new Promise((res,rej)=>{recorder.onstop=res;recorder.onerror=()=>rej(recorder.error||Error('Video recorder failed'))});
+ recorder.start(250);
+ try{
+  for(let i=0;i<q.carousel.slideCount;i++){
+   toast(`Rendering slide ${i+1}/${q.carousel.slideCount} into one video…`);
+   const snapshot=cut(full,i,q.carousel),ms=clamp(Number(q.carousel.durations?.[i])||3,.5,60)*1000,start=performance.now();
+   await new Promise(resolve=>{function frame(t){const k=Math.min(1,(t-start)/ms),z=1+.018*k,dx=canvas.width*(z-1)/2,dy=canvas.height*(z-1)/2;ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.save();ctx.translate(-dx,-dy);ctx.scale(z,z);ctx.drawImage(snapshot,0,0);ctx.restore();if(t-start<ms)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});
+  }
+ }finally{
+  if(recorder.state!=='inactive')recorder.stop();
+ }
+ await done;stream.getTracks().forEach(track=>track.stop());
+ const ext=type.includes('mp4')?'mp4':'webm',file=new File([new Blob(chunks,{type})],`${safe(q.name)}.${ext}`,{type});
+ return file;
+}
+async function videos(q){return[await videoSequence(q)]}"""
+          )
+
+          replace_exact(
+              "js/carousel.js",
+              "function sheet(){let s=$('#wcExport');if(s)return s;s=document.createElement('div');s.id='wcExport';s.className='wc-export';s.hidden=true;s.innerHTML='<div class=\"wc-back\" data-close></div><div class=\"wc-card\"><div class=\"wc-title\"><div><small>Seamless Carousel</small><h3>Export</h3></div><button data-close>×</button></div><p>Export numbered slides in Instagram order or turn each slide into a timed motion video.</p><div class=\"wc-actions\"><button data-x=\"jpg\">JPG slides</button><button data-x=\"png\">PNG slides</button><button data-x=\"video\" class=\"primary\">Timed videos</button></div><div id=\"wcDownloads\" hidden></div><small class=\"note\">Video timing uses each slide’s Time setting. This motion export animates the finished slide; live embedded-video compositing remains separate.</small></div>';document.body.append(s);return s}",
+              "function sheet(){let s=$('#wcExport');if(s)return s;s=document.createElement('div');s.id='wcExport';s.className='wc-export';s.hidden=true;s.innerHTML='<div class=\"wc-back\" data-close></div><div class=\"wc-card\"><div class=\"wc-title\"><div><small>Seamless Carousel</small><h3>Export</h3></div><button data-close>×</button></div><p>Export numbered image slides, or combine the entire carousel into one timed video.</p><div class=\"wc-actions\"><button data-x=\"jpg\">JPG slides</button><button data-x=\"png\">PNG slides</button><button data-x=\"video\" class=\"primary\">Single video</button></div><div id=\"wcDownloads\" hidden></div><small class=\"note\">The single video plays every slide in order using each slide’s Time setting. Live embedded-video compositing remains separate.</small></div>';document.body.append(s);return s}"
+          )
+
+          replace_exact(
+              "js/carousel.js",
+              "W.Carousel={templates:BUILT,images,videos,show,version:'2026.08.14-clean-r10'};",
+              "W.Carousel={templates:BUILT,images,videos,videoSequence,show,version:'2026.08.14-clean-r12'};"
+          )
+
+          for name in ("index.html", "manifest.json"):
+              p = Path(name)
+              text = p.read_text()
+              if "20260814r10" not in text:
+                  raise SystemExit(f"Expected r10 cache key missing in {name}")
+              p.write_text(text.replace("20260814r10", "20260814r12"))
+
+          replace_exact("sw.js", "washi-shell-r10-clean", "washi-shell-r12-clean")
+
+      - name: Validate JavaScript and exact r12 blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check app.js
+          node --check js/background-photo.js
+          node --check js/carousel.js
+          test "$(git hash-object app.js)" = "a1cd78553c0dcd99dfdab760ca345513a01c7a16"
+          test "$(git hash-object index.html)" = "ac5be2263f937e237edd8f13d71a151d2c880a51"
+          test "$(git hash-object js/background-photo.js)" = "54baa5cc335de67942b59e6c0bde6f79c03a7039"
+          test "$(git hash-object js/carousel.js)" = "cdc9acfad202c88d1f2ab17862776576d07e571e"
+          test "$(git hash-object manifest.json)" = "fc622b426dc0382310cad3a1406c1be595e4cd0d"
+          test "$(git hash-object sw.js)" = "a6f7fd2eedea77dc7129bbc8eb14b7d89ee3800e"
+          test "$(git diff --name-only | sort | tr '\n' ' ')" = "app.js index.html js/background-photo.js js/carousel.js manifest.json sw.js "
+
+      - name: Commit r12
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "OpenAI"
+          git config user.email "noreply@openai.com"
+          git add app.js index.html js/background-photo.js js/carousel.js manifest.json sw.js
+          git commit -m "Fix photo dump layout and carousel video export"
+          git push origin HEAD:agent/washi-r12-photo-dump-video
