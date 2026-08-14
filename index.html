@@ -11,10 +11,10 @@
   <meta name="apple-mobile-web-app-title" content="Washi" />
   <title>Washi — Story & Creative Studio</title>
   <meta name="description" content="Create stories, photo dumps, collages, videos, text layouts, and reusable social templates." />
-  <link rel="manifest" href="./manifest.json?v=20260814r12" />
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=20260814r12" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png?v=20260814r12" />
-  <link rel="stylesheet" href="./style.css?v=20260814r12" />
+  <link rel="manifest" href="./manifest.json?v=20260814r13" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=20260814r13" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png?v=20260814r13" />
+  <link rel="stylesheet" href="./style.css?v=20260814r13" />
 </head>
 <body>
 <div id="app" class="app-shell">
@@ -33,7 +33,7 @@
       <div class="hero-card paper-texture"><span class="soft-pill">make something lovely ✦</span><h1>Your moments,<br><em>made your way.</em></h1><p>Turn photos, videos, words, colors, and little details into stories that feel like you.</p><div class="hero-actions"><button class="primary-button" data-action="new-project">＋ New design</button><button class="secondary-button" data-route="templates">Browse templates</button></div></div>
       <article class="name-story-card"><div class="name-story-mark">和紙</div><div><span class="section-kicker">Why Washi?</span><p><strong>Washi (和紙)</strong> means “Japanese paper.” Inspired by its beautiful textures and patterns, Washi is a creative space for turning photos and videos into stories that feel personal and uniquely yours.</p></div></article>
       <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Start creating</span><h2>What are you making?</h2></div></div><div class="format-grid"><button class="format-card" data-format="story"><b>♡</b><span>Story</span><small>1080 × 1920</small></button><button class="format-card" data-format="portrait"><b>▧</b><span>Post</span><small>1080 × 1350</small></button><button class="format-card" data-format="square"><b>◇</b><span>Square</span><small>1080 × 1080</small></button><button class="format-card" data-format="reel"><b>▶</b><span>Reel cover</span><small>1080 × 1920</small></button><button class="format-card" data-format="dump"><b>✿</b><span>Photo dump</span><small>Smart layouts</small></button><button class="format-card" data-format="custom"><b>⌁</b><span>Custom</span><small>Your dimensions</small></button></div></section>
-      <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Quick tools</span><h2>Make it faster</h2></div></div><div class="quick-grid"><button class="quick-card" data-action="photo-dump"><span>🎞️</span><b>Photo Dump</b><small>Choose photos; Washi arranges them.</small></button><button class="quick-card" data-action="palette"><span>🎨</span><b>Palette from Photo</b><small>Pull matching colors from a picture.</small></button><button class="quick-card" data-action="fun-text"><span>✍️</span><b>Fun Text</b><small>Life lately, POV, tiny joys & more.</small></button><button class="quick-card" data-route="templates"><span>✦</span><b>Template Library</b><small>Scrapbook, film, travel, couples & more.</small></button></div></section>
+      <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Quick tools</span><h2>Make it faster</h2></div></div><div class="quick-grid"><button class="quick-card" data-action="auto-dump"><span>✨</span><b>Auto Dump</b><small>Choose photos once; Washi decides collage, carousel, or video.</small></button><button class="quick-card" data-action="palette"><span>🎨</span><b>Palette from Photo</b><small>Pull matching colors from a picture.</small></button><button class="quick-card" data-action="fun-text"><span>✍️</span><b>Fun Text</b><small>Life lately, POV, tiny joys & more.</small></button><button class="quick-card" data-route="templates"><span>✦</span><b>Template Library</b><small>Scrapbook, film, travel, couples & more.</small></button></div></section>
       <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Made for you</span><h2>Template ideas</h2></div><button class="text-button" data-route="templates">See all</button></div><div class="template-scroller" id="homeTemplates"></div></section>
       <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Keep creating</span><h2>Recent projects</h2></div><button class="text-button" data-route="projects">See all</button></div><div class="project-grid compact" id="recentProjects"></div></section>
     </section>
@@ -50,23 +50,24 @@
   </main>
   <nav class="bottom-nav" id="bottomNav"><button class="nav-item active" data-route="home"><span>⌂</span><small>Home</small></button><button class="nav-item" data-route="templates"><span>▦</span><small>Templates</small></button><button class="nav-create" data-action="new-project" aria-label="Create">＋</button><button class="nav-item" data-route="projects"><span>◇</span><small>Projects</small></button><button class="nav-item" data-route="saved"><span>♡</span><small>Saved</small></button></nav>
 </div>
-<aside class="drawer" id="drawer" aria-hidden="true"><div class="drawer-backdrop" data-close-drawer></div><div class="drawer-panel"><div class="drawer-header"><div class="drawer-brand"><img src="./icons/icon-192.png" alt=""><div><small>Story & Creative Studio</small><strong>Washi</strong></div></div><button class="round-button" data-close-drawer>×</button></div><div class="drawer-about paper-texture"><span>和紙</span><p><strong>Washi (和紙)</strong> means “Japanese paper.” Inspired by its beautiful textures and patterns, Washi is a creative space for turning photos and videos into stories that feel personal and uniquely yours.</p></div><div class="drawer-label">Create</div><div class="drawer-links"><button data-action="new-project">New Design <span>›</span></button><button data-route="templates">Template Library <span>›</span></button><button data-action="photo-dump">Photo Dump Generator <span>›</span></button><button data-action="fun-text">Fun Text Templates <span>›</span></button></div><div class="drawer-label">Your studio</div><div class="drawer-links"><button data-route="projects">My Projects <span>›</span></button><button data-route="saved">Favorites & Saved <span>›</span></button><button data-action="my-style">My Style <span>›</span></button><button data-action="palette">Color Palettes <span>›</span></button></div><div class="drawer-label">Tools & settings</div><div class="drawer-links"><button data-action="safe-zones">Instagram Safe Zones <span>›</span></button><button data-action="settings">Editor Settings <span>›</span></button><button data-action="whats-new">What’s New <span class="new-badge">NEW</span></button></div><div class="drawer-version">Washi 1.0.0 · Creative Studio release</div></div></aside>
+<aside class="drawer" id="drawer" aria-hidden="true"><div class="drawer-backdrop" data-close-drawer></div><div class="drawer-panel"><div class="drawer-header"><div class="drawer-brand"><img src="./icons/icon-192.png" alt=""><div><small>Story & Creative Studio</small><strong>Washi</strong></div></div><button class="round-button" data-close-drawer>×</button></div><div class="drawer-about paper-texture"><span>和紙</span><p><strong>Washi (和紙)</strong> means “Japanese paper.” Inspired by its beautiful textures and patterns, Washi is a creative space for turning photos and videos into stories that feel personal and uniquely yours.</p></div><div class="drawer-label">Create</div><div class="drawer-links"><button data-action="new-project">New Design <span>›</span></button><button data-route="templates">Template Library <span>›</span></button><button data-action="auto-dump">Auto Dump <span>›</span></button><button data-action="photo-dump">Photo Dump Generator <span>›</span></button><button data-action="fun-text">Fun Text Templates <span>›</span></button></div><div class="drawer-label">Your studio</div><div class="drawer-links"><button data-route="projects">My Projects <span>›</span></button><button data-route="saved">Favorites & Saved <span>›</span></button><button data-action="my-style">My Style <span>›</span></button><button data-action="palette">Color Palettes <span>›</span></button></div><div class="drawer-label">Tools & settings</div><div class="drawer-links"><button data-action="safe-zones">Instagram Safe Zones <span>›</span></button><button data-action="settings">Editor Settings <span>›</span></button><button data-action="whats-new">What’s New <span class="new-badge">NEW</span></button></div><div class="drawer-version">Washi 1.0.0 · Creative Studio release</div></div></aside>
 <div class="modal" id="modal" aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="modal-card"><div class="modal-handle"></div><div id="modalContent"></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="mediaInput" accept="image/*,video/*" multiple hidden />
+<input type="file" id="autoDumpInput" accept="image/*" multiple hidden />
 <input type="file" id="photoDumpInput" accept="image/*" multiple hidden />
 <input type="file" id="paletteInput" accept="image/*" hidden />
 <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" hidden />
-<script src="./js/db.js?v=20260814r12" defer></script>
-<script src="./js/templates.js?v=20260814r12" defer></script>
-<script src="./js/template-reference-pack-5.js?v=20260814r12" defer></script>
-<script src="./js/editor.js?v=20260814r12" defer></script>
-<script src="./js/template-freedom.js?v=20260814r12" defer></script>
-<script src="./js/media-fill-upgrade.js?v=20260814r12" defer></script>
-<script src="./js/background-photo.js?v=20260814r12" defer></script>
-<script src="./js/export.js?v=20260814r12" defer></script>
-<script src="./js/carousel.js?v=20260814r12" defer></script>
-<script src="./app.js?v=20260814r12" defer></script>
-<script src="./js/web-cutout.js?v=20260814r12" defer></script>
+<script src="./js/db.js?v=20260814r13" defer></script>
+<script src="./js/templates.js?v=20260814r13" defer></script>
+<script src="./js/template-reference-pack-5.js?v=20260814r13" defer></script>
+<script src="./js/editor.js?v=20260814r13" defer></script>
+<script src="./js/template-freedom.js?v=20260814r13" defer></script>
+<script src="./js/media-fill-upgrade.js?v=20260814r13" defer></script>
+<script src="./js/background-photo.js?v=20260814r13" defer></script>
+<script src="./js/export.js?v=20260814r13" defer></script>
+<script src="./js/carousel.js?v=20260814r13" defer></script>
+<script src="./app.js?v=20260814r13" defer></script>
+<script src="./js/web-cutout.js?v=20260814r13" defer></script>
 </body>
 </html>
