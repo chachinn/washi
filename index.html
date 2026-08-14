@@ -11,10 +11,10 @@
   <meta name="apple-mobile-web-app-title" content="Washi" />
   <title>Washi — Story & Creative Studio</title>
   <meta name="description" content="Create stories, photo dumps, collages, videos, text layouts, and reusable social templates." />
-  <link rel="manifest" href="./manifest.json?v=20260814r13" />
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=20260814r13" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png?v=20260814r13" />
-  <link rel="stylesheet" href="./style.css?v=20260814r13" />
+  <link rel="manifest" href="./manifest.json?v=20260814r14" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=20260814r14" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png?v=20260814r14" />
+  <link rel="stylesheet" href="./style.css?v=20260814r14" />
 </head>
 <body>
 <div id="app" class="app-shell">
@@ -33,7 +33,7 @@
       <div class="hero-card paper-texture"><span class="soft-pill">make something lovely ✦</span><h1>Your moments,<br><em>made your way.</em></h1><p>Turn photos, videos, words, colors, and little details into stories that feel like you.</p><div class="hero-actions"><button class="primary-button" data-action="new-project">＋ New design</button><button class="secondary-button" data-route="templates">Browse templates</button></div></div>
       <article class="name-story-card"><div class="name-story-mark">和紙</div><div><span class="section-kicker">Why Washi?</span><p><strong>Washi (和紙)</strong> means “Japanese paper.” Inspired by its beautiful textures and patterns, Washi is a creative space for turning photos and videos into stories that feel personal and uniquely yours.</p></div></article>
       <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Start creating</span><h2>What are you making?</h2></div></div><div class="format-grid"><button class="format-card" data-format="story"><b>♡</b><span>Story</span><small>1080 × 1920</small></button><button class="format-card" data-format="portrait"><b>▧</b><span>Post</span><small>1080 × 1350</small></button><button class="format-card" data-format="square"><b>◇</b><span>Square</span><small>1080 × 1080</small></button><button class="format-card" data-format="reel"><b>▶</b><span>Reel cover</span><small>1080 × 1920</small></button><button class="format-card" data-format="dump"><b>✿</b><span>Photo dump</span><small>Smart layouts</small></button><button class="format-card" data-format="custom"><b>⌁</b><span>Custom</span><small>Your dimensions</small></button></div></section>
-      <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Quick tools</span><h2>Make it faster</h2></div></div><div class="quick-grid"><button class="quick-card" data-action="auto-dump"><span>✨</span><b>Auto Dump</b><small>Choose photos once; Washi decides collage, carousel, or video.</small></button><button class="quick-card" data-action="palette"><span>🎨</span><b>Palette from Photo</b><small>Pull matching colors from a picture.</small></button><button class="quick-card" data-action="fun-text"><span>✍️</span><b>Fun Text</b><small>Life lately, POV, tiny joys & more.</small></button><button class="quick-card" data-route="templates"><span>✦</span><b>Template Library</b><small>Scrapbook, film, travel, couples & more.</small></button></div></section>
+      <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Quick tools</span><h2>Make it faster</h2></div></div><div class="quick-grid"><button class="quick-card" data-action="auto-dump"><span>✨</span><b>Auto Dump</b><small>Choose photos once; shuffle collage, templates, carousel, or video.</small></button><button class="quick-card" data-action="palette"><span>🎨</span><b>Palette from Photo</b><small>Pull matching colors from a picture.</small></button><button class="quick-card" data-action="fun-text"><span>✍️</span><b>Fun Text</b><small>Life lately, POV, tiny joys & more.</small></button><button class="quick-card" data-route="templates"><span>✦</span><b>Template Library</b><small>Scrapbook, film, travel, couples & more.</small></button></div></section>
       <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Made for you</span><h2>Template ideas</h2></div><button class="text-button" data-route="templates">See all</button></div><div class="template-scroller" id="homeTemplates"></div></section>
       <section class="home-section"><div class="section-heading"><div><span class="section-kicker">Keep creating</span><h2>Recent projects</h2></div><button class="text-button" data-route="projects">See all</button></div><div class="project-grid compact" id="recentProjects"></div></section>
     </section>
@@ -58,16 +58,17 @@
 <input type="file" id="photoDumpInput" accept="image/*" multiple hidden />
 <input type="file" id="paletteInput" accept="image/*" hidden />
 <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" hidden />
-<script src="./js/db.js?v=20260814r13" defer></script>
-<script src="./js/templates.js?v=20260814r13" defer></script>
-<script src="./js/template-reference-pack-5.js?v=20260814r13" defer></script>
-<script src="./js/editor.js?v=20260814r13" defer></script>
-<script src="./js/template-freedom.js?v=20260814r13" defer></script>
-<script src="./js/media-fill-upgrade.js?v=20260814r13" defer></script>
-<script src="./js/background-photo.js?v=20260814r13" defer></script>
-<script src="./js/export.js?v=20260814r13" defer></script>
-<script src="./js/carousel.js?v=20260814r13" defer></script>
-<script src="./app.js?v=20260814r13" defer></script>
-<script src="./js/web-cutout.js?v=20260814r13" defer></script>
+<script src="./js/db.js?v=20260814r14" defer></script>
+<script src="./js/templates.js?v=20260814r14" defer></script>
+<script src="./js/template-reference-pack-5.js?v=20260814r14" defer></script>
+<script src="./js/editor.js?v=20260814r14" defer></script>
+<script src="./js/template-freedom.js?v=20260814r14" defer></script>
+<script src="./js/media-fill-upgrade.js?v=20260814r14" defer></script>
+<script src="./js/background-photo.js?v=20260814r14" defer></script>
+<script src="./js/export.js?v=20260814r14" defer></script>
+<script src="./js/carousel.js?v=20260814r14" defer></script>
+<script src="./app.js?v=20260814r14" defer></script>
+<script src="./js/auto-dump-styles.js?v=20260814r14" defer></script>
+<script src="./js/web-cutout.js?v=20260814r14" defer></script>
 </body>
 </html>
