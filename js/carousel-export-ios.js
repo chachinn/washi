@@ -18,7 +18,6 @@ function mime(){
  }
  return null;
 }
-const ease=t=>t*t*t*(t*(t*6-15)+10);
 function animate(ms,draw){
  return new Promise(resolve=>{
   const start=performance.now();
@@ -26,20 +25,17 @@ function animate(ms,draw){
   requestAnimationFrame(frame);
  });
 }
-function drawHold(ctx,canvas,full,c,index,p){
- const w=c.slideWidth,h=c.slideHeight;
- const z=1+.006*Math.sin(Math.PI*p);
- const sw=w/z,sh=h/z;
- const sx=index*w+(w-sw)/2,sy=(h-sh)/2;
- ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);
- ctx.drawImage(full,sx,sy,sw,sh,0,0,w,h);
-}
-function drawGlide(ctx,canvas,full,c,index,p){
- const w=c.slideWidth,h=c.slideHeight;
- const maxX=Math.max(0,full.width-w);
- const sx=clamp((index+ease(p))*w,0,maxX);
+function drawPan(ctx,canvas,full,c,p){
+ const w=c.slideWidth,h=c.slideHeight,maxX=Math.max(0,full.width-w);
+ const sx=clamp(maxX*p,0,maxX);
  ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);
  ctx.drawImage(full,sx,0,w,h,0,0,w,h);
+}
+function totalPanMs(q){
+ const count=Math.max(1,Number(q.carousel?.slideCount)||1);
+ const durations=Array.from({length:count},(_,i)=>clamp(Number(q.carousel?.durations?.[i])||3,.5,60));
+ const average=durations.reduce((sum,n)=>sum+n,0)/durations.length;
+ return Math.max(500,average*count*1000);
 }
 async function renderVideo(q){
  const recorderType=mime();
@@ -48,21 +44,16 @@ async function renderVideo(q){
  canvas.width=q.carousel.slideWidth;canvas.height=q.carousel.slideHeight;
  if(!canvas.captureStream)throw Error('Timed video export is not supported by this browser');
  const ctx=canvas.getContext('2d',{alpha:false}),stream=canvas.captureStream(30),chunks=[];
- drawGlide(ctx,canvas,full,q.carousel,0,0);
+ drawPan(ctx,canvas,full,q.carousel,0);
  const recorder=new MediaRecorder(stream,{mimeType:recorderType,videoBitsPerSecond:6000000});
  recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
  const done=new Promise((res,rej)=>{recorder.onstop=res;recorder.onerror=()=>rej(recorder.error||Error('Video recorder failed'))});
  recorder.start(250);
  try{
-  for(let i=0;i<q.carousel.slideCount;i++){
-   toast(`Rendering slide ${i+1}/${q.carousel.slideCount} into one video…`);
-   const totalMs=clamp(Number(q.carousel.durations?.[i])||3,.5,60)*1000;
-   const hasNext=i<q.carousel.slideCount-1;
-   const glideMs=hasNext?Math.min(850,Math.max(460,totalMs*.24)):0;
-   const holdMs=Math.max(140,totalMs-glideMs);
-   await animate(holdMs,p=>drawHold(ctx,canvas,full,q.carousel,i,p));
-   if(hasNext)await animate(glideMs,p=>drawGlide(ctx,canvas,full,q.carousel,i,p));
-  }
+  const count=Math.max(1,Number(q.carousel.slideCount)||1),ms=totalPanMs(q);
+  toast(count>1?`Rendering one seamless ${count}-slide pan…`:'Rendering video…');
+  if(count>1)await animate(ms,p=>drawPan(ctx,canvas,full,q.carousel,p));
+  else await animate(ms,()=>drawPan(ctx,canvas,full,q.carousel,0));
  }finally{if(recorder.state!=='inactive')recorder.stop()}
  await done;stream.getTracks().forEach(track=>track.stop());
  if(!chunks.length)throw Error('The browser did not produce video data.');
@@ -101,11 +92,11 @@ document.addEventListener('click',async e=>{
  e.preventDefault();e.stopImmediatePropagation();
  clearPrepared();
  const sheet=$('#wcExport'),buttons=[...sheet.querySelectorAll('[data-x]')],box=$('#wcDownloads');
- buttons.forEach(b=>b.disabled=true);if(box){box.hidden=false;box.innerHTML='<small class="wc-save-hint">Preparing one continuous carousel video…</small>'}
+ buttons.forEach(b=>b.disabled=true);if(box){box.hidden=false;box.innerHTML='<small class="wc-save-hint">Preparing one continuous seamless pan…</small>'}
  try{const file=await renderVideo(project());showReady(file);toast('Video ready — tap Save / Share video')}
  catch(err){if(box){box.hidden=false;box.innerHTML=''}toast(err?.message||'Video export failed')}
  finally{buttons.forEach(b=>b.disabled=false)}
 },true);
 const css=document.createElement('style');css.textContent='.wc-save-ready{min-height:48px;border:0;border-radius:14px;background:var(--rose);color:#fff;font-weight:850;padding:0 16px}.wc-save-hint{display:block;color:var(--muted);line-height:1.4;padding:4px 2px}';document.head.append(css);
-W.CarouselIOSExport={renderVideo,version:'v1.0-iphone-video-camera-glide'};
+W.CarouselIOSExport={renderVideo,version:'v1.0-iphone-video-seamless-pan'};
 })();
