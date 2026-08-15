@@ -3,7 +3,7 @@
 const W=window.Washi=window.Washi||{};
 W.VERSION='v1.0';
 W.RELEASE_STAGE='pre-release';
-W.RUNTIME_BUILD='20260816-template-discovery-restore1';
+W.RUNTIME_BUILD='20260816-carousel-slide-video1';
 document.documentElement.dataset.washiVersion='v1.0';
 
 const versionNode=document.querySelector('.drawer-version');
