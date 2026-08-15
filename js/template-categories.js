@@ -6,6 +6,7 @@ const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelecto
 
 const ORDER=[
   'Photo & Recap',
+  'Carousels',
   'Love & Celebrations',
   'Travel',
   'Lifestyle & Wellness',
@@ -14,8 +15,7 @@ const ORDER=[
   'Moodboards & Goals',
   'Film, Journal & Scrapbook',
   'Editorial & UI',
-  'Business & Events',
-  'Carousels'
+  'Business & Events'
 ];
 
 const GROUP={
@@ -71,12 +71,34 @@ function regroup(){
 const state=regroup();
 const byId=new Map(T.TEMPLATES.map(t=>[t.id,t]));
 
+function makeChip(key){
+  const b=document.createElement('button');
+  b.className='chip';
+  b.dataset.templateCategory=key;
+  b.textContent=key;
+  return b;
+}
+
 function syncChips(){
   const row=$('#templateChips');
   if(!row)return;
-  const buttons=new Map($$('[data-template-category]',row).map(b=>[b.dataset.templateCategory,b]));
-  const ordered=['All',...ORDER.filter(c=>state.used.has(c)),...state.extras];
-  for(const key of ordered){const b=buttons.get(key);if(b)row.append(b)}
+  const desired=['All',...ORDER.filter(c=>state.used.has(c)),...state.extras];
+  const desiredSet=new Set(desired);
+  const existing=$$('[data-template-category]',row);
+  const buttons=new Map(existing.map(b=>[b.dataset.templateCategory,b]));
+  const oldActive=existing.find(b=>b.classList.contains('active'))?.dataset.templateCategory||'All';
+  const active=GROUP[oldActive]||oldActive;
+
+  for(const b of existing){
+    if(!desiredSet.has(b.dataset.templateCategory))b.remove();
+  }
+
+  for(const key of desired){
+    let b=buttons.get(key);
+    if(!b||!b.isConnected)b=makeChip(key);
+    b.classList.toggle('active',key===active);
+    row.append(b);
+  }
 }
 
 function syncCardLabels(root=document){
