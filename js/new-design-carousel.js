@@ -35,11 +35,10 @@ function convertCurrentProjectToCarousel(){
   p.objects=[];
   p.drawings=[];
   p.carousel={enabled:true,slideCount:SLIDES,slideWidth:SW,slideHeight:SH,durations:Array(SLIDES).fill(3),activeSlide:0,view:'slide'};
-  E.state.selectedId=null;
   DB.saveSettings({lastFormat:'carousel'});
-  E.render();
-  E.save();
-  requestAnimationFrame(()=>E.fit());
+  DB.upsertProject(p);
+  E.setProject(p);
+  E.save({history:false});
 }
 
 document.addEventListener('click',event=>{
