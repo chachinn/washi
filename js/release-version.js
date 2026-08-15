@@ -20,12 +20,12 @@ document.addEventListener('click',event=>{
 // v1.0 experience modules load after the normal deferred app modules so they
 // can extend the production editor without changing its initialization order.
 function loadExperienceModules(){
-  const files=['tool-panel-ux.js','canvas-style-pack.js','auto-dump-looks.js','project-batch.js','template-draft.js','project-previews.js','palette-workflow.js','appearance.js','home-compact.js','template-categories.js','new-design-carousel.js','smart-layout.js'];
+  const files=['tool-panel-ux.js','canvas-style-pack.js','auto-dump-looks.js','project-batch.js','template-draft.js','project-previews.js','palette-workflow.js','appearance.js','home-compact.js','template-categories.js','new-design-carousel.js','smart-layout.js','carousel-export-ios.js','mobile-stability.js'];
   for(const file of files){
     const id=`washi-${file.replace(/\W+/g,'-')}`;
     if(document.getElementById(id))continue;
     const script=document.createElement('script');
-    script.id=id;script.src=`./js/${file}?v=1.0&build=20260815-smartlayout2`;script.async=false;
+    script.id=id;script.src=`./js/${file}?v=1.0&build=20260815-iphonefix1`;script.async=false;
     document.head.append(script);
   }
 }
