@@ -25,7 +25,7 @@ function loadExperienceModules(){
     const id=`washi-${file.replace(/\W+/g,'-')}`;
     if(document.getElementById(id))continue;
     const script=document.createElement('script');
-    script.id=id;script.src=`./js/${file}?v=1.0&build=20260815-smartlayout`;script.async=false;
+    script.id=id;script.src=`./js/${file}?v=1.0&build=20260815-smartlayout2`;script.async=false;
     document.head.append(script);
   }
 }
