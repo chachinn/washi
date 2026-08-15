@@ -25,13 +25,16 @@ const GROUP={
   'Photo Dump':'Photo & Recap',
   'Recap':'Photo & Recap',
   'Collage':'Photo & Recap',
+  'Photographer':'Photo & Recap',
   'Birthday':'Love & Celebrations',
   'Wedding':'Love & Celebrations',
   'Couples':'Love & Celebrations',
   'Friends':'Love & Celebrations',
+  'Celebrations':'Love & Celebrations',
   'Travel':'Travel',
   'Food':'Lifestyle & Wellness',
   'Sports & Fitness':'Lifestyle & Wellness',
+  'Seasonal':'Lifestyle & Wellness',
   'Fashion':'Fashion & Beauty',
   'Beauty':'Fashion & Beauty',
   'Quotes':'Words & Games',
@@ -41,6 +44,7 @@ const GROUP={
   'Moodboard':'Moodboards & Goals',
   'Film':'Film, Journal & Scrapbook',
   'Film & Instant':'Film, Journal & Scrapbook',
+  'Instant':'Film, Journal & Scrapbook',
   'Journal':'Film, Journal & Scrapbook',
   'Scrapbook':'Film, Journal & Scrapbook',
   'Editorial':'Editorial & UI',
@@ -51,14 +55,21 @@ const GROUP={
   'Carousel':'Carousels'
 };
 
+function parentFor(t){
+  const original=t.originalCategory||t.subcategory||t.category||'Template';
+  return GROUP[original]||original;
+}
+
 function regroup(){
   const used=new Set();
   for(const t of T.TEMPLATES){
-    const original=t.subcategory||t.originalCategory||t.category||'Template';
+    const original=t.originalCategory||t.subcategory||t.category||'Template';
     const group=GROUP[original]||original;
+    // Keep the semantic template category intact. Parent categories are browsing
+    // metadata only; creation/recommendation logic may depend on the original type.
     t.originalCategory=original;
     t.subcategory=original;
-    t.category=group;
+    t.parentCategory=group;
     used.add(group);
     const tags=new Set(t.tags||[]);
     tags.add(original.toLowerCase());
@@ -80,16 +91,19 @@ const bgStyle=b=>!b?'#fff':b.type==='solid'?b.value:b.type==='gradient'?b.value:
 function allMatches(){
   const q=state.query.toLowerCase();
   return nativeFilter.call(T.TEMPLATES,t=>{
-    if(state.category!=='All'&&t.category!==state.category)return false;
+    if(state.category!=='All'&&parentFor(t)!==state.category)return false;
     if(!q)return true;
-    const haystack=`${t.title||''} ${t.category||''} ${t.subcategory||''} ${t.originalCategory||''} ${t.collection||''} ${(t.tags||[]).join(' ')}`.toLowerCase();
+    const haystack=`${t.title||''} ${t.category||''} ${t.parentCategory||''} ${t.subcategory||''} ${t.originalCategory||''} ${t.collection||''} ${(t.tags||[]).join(' ')}`.toLowerCase();
     return haystack.includes(q);
   });
 }
 
 function categoryCounts(){
   const counts=new Map();
-  for(const t of T.TEMPLATES)counts.set(t.category,(counts.get(t.category)||0)+1);
+  for(const t of T.TEMPLATES){
+    const group=parentFor(t);
+    counts.set(group,(counts.get(group)||0)+1);
+  }
   return counts;
 }
 
@@ -122,7 +136,7 @@ function footerHtml(total){
 function updateSummary(total){
   const p=$('#templatesView .page-heading p');
   if(!p)return;
-  const scope=state.category==='All'?'11 browsing categories':state.category;
+  const scope=state.category==='All'?`${ORDER.length} browsing categories`:state.category;
   p.textContent=`${total.toLocaleString()} matching templates · ${T.TEMPLATES.length.toLocaleString()} total · ${scope}. Every template stays fully editable.`;
 }
 
@@ -202,7 +216,7 @@ css.textContent=`
 `;
 document.head.append(css);
 
-W.TemplateCategories={version:'v1.0',order:ORDER,groups:GROUP,count:T.TEMPLATES.length,sync:()=>render(false)};
+W.TemplateCategories={version:'v1.0',order:ORDER,groups:GROUP,count:T.TEMPLATES.length,parentFor,sync:()=>render(false)};
 W.TemplateLibraryEnhanced={version:'v1.0-full-library',total:T.TEMPLATES.length,pageSize:PAGE_SIZE,state,render,loadMore};
 schedule(true);
 })();
