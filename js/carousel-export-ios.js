@@ -18,8 +18,7 @@ function mime(){
  }
  return null;
 }
-function cut(full,i,c){const o=document.createElement('canvas');o.width=c.slideWidth;o.height=c.slideHeight;o.getContext('2d',{alpha:false}).drawImage(full,i*c.slideWidth,0,c.slideWidth,c.slideHeight,0,0,c.slideWidth,c.slideHeight);return o}
-const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const ease=t=>t*t*t*(t*(t*6-15)+10);
 function animate(ms,draw){
  return new Promise(resolve=>{
   const start=performance.now();
@@ -27,16 +26,20 @@ function animate(ms,draw){
   requestAnimationFrame(frame);
  });
 }
-function drawHold(ctx,canvas,snapshot,p){
- const z=1+.012*p,dx=canvas.width*(z-1)/2,dy=canvas.height*(z-1)/2;
+function drawHold(ctx,canvas,full,c,index,p){
+ const w=c.slideWidth,h=c.slideHeight;
+ const z=1+.006*Math.sin(Math.PI*p);
+ const sw=w/z,sh=h/z;
+ const sx=index*w+(w-sw)/2,sy=(h-sh)/2;
  ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);
- ctx.save();ctx.translate(-dx,-dy);ctx.scale(z,z);ctx.drawImage(snapshot,0,0);ctx.restore();
+ ctx.drawImage(full,sx,sy,sw,sh,0,0,w,h);
 }
-function drawPush(ctx,canvas,current,next,p){
- const k=ease(p),x=Math.round(k*canvas.width);
+function drawGlide(ctx,canvas,full,c,index,p){
+ const w=c.slideWidth,h=c.slideHeight;
+ const maxX=Math.max(0,full.width-w);
+ const sx=clamp((index+ease(p))*w,0,maxX);
  ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);
- ctx.drawImage(current,-x,0,canvas.width,canvas.height);
- ctx.drawImage(next,canvas.width-x,0,canvas.width,canvas.height);
+ ctx.drawImage(full,sx,0,w,h,0,0,w,h);
 }
 async function renderVideo(q){
  const recorderType=mime();
@@ -44,26 +47,21 @@ async function renderVideo(q){
  const full=await X.renderProject(q),canvas=document.createElement('canvas');
  canvas.width=q.carousel.slideWidth;canvas.height=q.carousel.slideHeight;
  if(!canvas.captureStream)throw Error('Timed video export is not supported by this browser');
- const ctx=canvas.getContext('2d',{alpha:false}),first=cut(full,0,q.carousel),stream=canvas.captureStream(30),chunks=[];
- ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(first,0,0);
+ const ctx=canvas.getContext('2d',{alpha:false}),stream=canvas.captureStream(30),chunks=[];
+ drawGlide(ctx,canvas,full,q.carousel,0,0);
  const recorder=new MediaRecorder(stream,{mimeType:recorderType,videoBitsPerSecond:6000000});
  recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
  const done=new Promise((res,rej)=>{recorder.onstop=res;recorder.onerror=()=>rej(recorder.error||Error('Video recorder failed'))});
  recorder.start(250);
  try{
-  let current=first;
   for(let i=0;i<q.carousel.slideCount;i++){
    toast(`Rendering slide ${i+1}/${q.carousel.slideCount} into one video…`);
-   if(i>0)current=cut(full,i,q.carousel);
    const totalMs=clamp(Number(q.carousel.durations?.[i])||3,.5,60)*1000;
    const hasNext=i<q.carousel.slideCount-1;
-   const transitionMs=hasNext?Math.min(650,Math.max(320,totalMs*.22)):0;
-   const holdMs=Math.max(120,totalMs-transitionMs);
-   await animate(holdMs,p=>drawHold(ctx,canvas,current,p));
-   if(hasNext){
-    const next=cut(full,i+1,q.carousel);
-    await animate(transitionMs,p=>drawPush(ctx,canvas,current,next,p));
-   }
+   const glideMs=hasNext?Math.min(850,Math.max(460,totalMs*.24)):0;
+   const holdMs=Math.max(140,totalMs-glideMs);
+   await animate(holdMs,p=>drawHold(ctx,canvas,full,q.carousel,i,p));
+   if(hasNext)await animate(glideMs,p=>drawGlide(ctx,canvas,full,q.carousel,i,p));
   }
  }finally{if(recorder.state!=='inactive')recorder.stop()}
  await done;stream.getTracks().forEach(track=>track.stop());
@@ -103,11 +101,11 @@ document.addEventListener('click',async e=>{
  e.preventDefault();e.stopImmediatePropagation();
  clearPrepared();
  const sheet=$('#wcExport'),buttons=[...sheet.querySelectorAll('[data-x]')],box=$('#wcDownloads');
- buttons.forEach(b=>b.disabled=true);if(box){box.hidden=false;box.innerHTML='<small class="wc-save-hint">Preparing one continuous sliding video…</small>'}
+ buttons.forEach(b=>b.disabled=true);if(box){box.hidden=false;box.innerHTML='<small class="wc-save-hint">Preparing one continuous carousel video…</small>'}
  try{const file=await renderVideo(project());showReady(file);toast('Video ready — tap Save / Share video')}
  catch(err){if(box){box.hidden=false;box.innerHTML=''}toast(err?.message||'Video export failed')}
  finally{buttons.forEach(b=>b.disabled=false)}
 },true);
 const css=document.createElement('style');css.textContent='.wc-save-ready{min-height:48px;border:0;border-radius:14px;background:var(--rose);color:#fff;font-weight:850;padding:0 16px}.wc-save-hint{display:block;color:var(--muted);line-height:1.4;padding:4px 2px}';document.head.append(css);
-W.CarouselIOSExport={renderVideo,version:'v1.0-iphone-video-slide-transition'};
+W.CarouselIOSExport={renderVideo,version:'v1.0-iphone-video-camera-glide'};
 })();
