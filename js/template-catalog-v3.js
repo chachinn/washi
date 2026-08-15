@@ -12,6 +12,20 @@ for(const[cat,kinds,min,max,formats]of C.PROFILES){
   }
   ci++;
 }
+
+// The historical composition-first catalog predates Washi's true Carousel editor.
+// Upgrade those old 1920×1080 wide concepts into real 3-slide 3240×1350 projects
+// while retaining their original composition instead of exposing them as plain posts.
+for(const t of catalog){
+  if(t.category!=='Carousel')continue;
+  const sx=3240/1920,sy=1350/1080;
+  for(const o of t.objects||[]){o.x=Number(o.x||0)*sx;o.y=Number(o.y||0)*sy;o.w=Number(o.w||0)*sx;o.h=Number(o.h||0)*sy;if(o.fontSize)o.fontSize=Number(o.fontSize)*sy}
+  t.format='portrait';
+  t.carousel={enabled:true,slideCount:3,slideWidth:1080,slideHeight:1350,durations:[3,3,3],activeSlide:0,view:'slide'};
+  t.tags=[...new Set([...(t.tags||[]),'true carousel','3 slides','1080x1350'])];
+  t.layoutSignature=t.objects.map(o=>`${o.type}:${Math.round(o.x)}:${Math.round(o.y)}:${Math.round(o.w||0)}:${Math.round(o.h||0)}:${Math.round(o.rotation||0)}`).join('|');
+}
+
 const internalSeen=new Set();
 for(const t of catalog){
   let s=t.layoutSignature,k=0;
