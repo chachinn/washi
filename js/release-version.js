@@ -3,7 +3,7 @@
 const W=window.Washi=window.Washi||{};
 W.VERSION='v1.0';
 W.RELEASE_STAGE='pre-release';
-W.RUNTIME_BUILD='20260816-cumulative-history-recovery1';
+W.RUNTIME_BUILD='20260816-cumulative-history-recovery2';
 document.documentElement.dataset.washiVersion='v1.0';
 
 const versionNode=document.querySelector('.drawer-version');
