@@ -3,8 +3,22 @@
 const W=window.Washi=window.Washi||{};
 W.VERSION='v1.0';
 W.RELEASE_STAGE='pre-release';
-W.RUNTIME_BUILD='20260816-carousel-camera-glide1';
+W.RUNTIME_BUILD='20260816-seamless-pan-firstpaint1';
 document.documentElement.dataset.washiVersion='v1.0';
+
+// Critical Home sizing is installed immediately so the first visible layout is
+// already the final compact layout. home-compact.js is intentionally a marker
+// only now, preventing a second late CSS pass and visible startup reflow.
+if(!document.getElementById('washiHomeFirstPaint')){
+  const homeFirstPaint=document.createElement('style');
+  homeFirstPaint.id='washiHomeFirstPaint';
+  homeFirstPaint.textContent=`
+.hero-card{padding:14px 16px 13px;border-radius:20px}.hero-card:after{right:12px;top:4px;font-size:2.15rem}.hero-card h1{margin:0 0 5px;font-size:clamp(1.5rem,5.8vw,2.05rem);line-height:1}.hero-card p{margin:0 0 9px;max-width:31rem;font-size:.8rem;line-height:1.3}.soft-pill{margin-bottom:6px;padding:4px 8px;font-size:.62rem}.hero-actions{gap:6px}.hero-actions .primary-button,.hero-actions .secondary-button{min-height:36px;padding-inline:11px;font-size:.76rem;border-radius:13px}
+.name-story-card{grid-template-columns:46px 1fr;gap:11px;margin-top:11px;padding:13px 14px;border-radius:19px}.name-story-mark{width:46px;height:46px;border-radius:14px;font-size:1.08rem}.name-story-card .section-kicker{font-size:.6rem}.name-story-card p{margin:2px 0 0;font-size:.79rem;line-height:1.34}.home-section{margin-top:20px}.nav-create{border-color:var(--pink-50)!important}
+@media(max-width:430px){.hero-card{padding:11px 12px 10px;border-radius:18px}.hero-card:after{right:9px;top:1px;font-size:1.7rem}.soft-pill{display:none}.hero-card h1{font-size:1.38rem;line-height:1.02;margin-bottom:5px;letter-spacing:-.035em}.hero-card h1 br{display:none}.hero-card h1 em:before{content:' '}.hero-card p{font-size:.71rem;line-height:1.23;margin-bottom:7px;max-width:94%}.hero-actions{gap:5px}.hero-actions .primary-button,.hero-actions .secondary-button{min-height:33px;padding-inline:9px;font-size:.69rem;border-radius:11px}.name-story-card{grid-template-columns:38px 1fr;gap:8px;margin-top:8px;padding:10px 11px;border-radius:16px}.name-story-mark{width:38px;height:38px;border-radius:12px;font-size:.92rem}.name-story-card .section-kicker{font-size:.54rem}.name-story-card p{margin-top:1px;font-size:.68rem;line-height:1.27}.home-section{margin-top:15px}}
+`;
+  document.head.append(homeFirstPaint);
+}
 
 const versionNode=document.querySelector('.drawer-version');
 if(versionNode)versionNode.textContent='Washi v1.0 · Creative Studio';
@@ -17,7 +31,7 @@ document.addEventListener('click',event=>{
   const notes=document.querySelector('#modalContent .field p');
   if(notes&&!notes.dataset.v1Ux){
     notes.dataset.v1Ux='1';
-    notes.innerHTML='• Full 1,482-template production library is browsable through 11 parent categories with incremental loading for iPhone performance<br>• Parent browsing categories no longer overwrite each template’s original type, so Photo Dump and Carousel recommendations keep their intended behavior<br>• Detailed types such as Wedding, Cafe, Film, Journal, Birthday, Instant, Seasonal, Seamless Carousel, and more remain searchable<br>• Smart Layout understands blank multi-photo designs, Photo Dump, and Carousel instead of stacking selected photos<br>• Carousel + Photos fills existing template frames first, balances blank carousels across slides, and adds organized overflow slides only when needed<br>• Carousel New Design opens a real 3-slide carousel directly instead of falling through to Portrait Post<br>• Carousel templates have a dedicated Carousels category near the front of the category row<br>• Carousel is a core New Design choice while Photo Dump stays available<br>• Templates stay temporary until you actually edit them<br>• Projects show visual design previews instead of title-only thumbnails<br>• More compact Home creation banner<br>• Saved Palettes recolor designs, selected layers, canvases, and My Style<br>• Appearance themes, custom accent color, and local custom wallpaper<br>• Phone-ratio wallpaper crop with drag and zoom before saving<br>• iPhone wallpaper uses one dedicated fixed viewport layer instead of competing fixed backgrounds<br>• Minimize editor controls without leaving the active tool<br>• Draw on the full canvas while Draw controls are hidden<br>• 28 additional Canvas Style presets<br>• 27 Auto Dump shuffle looks<br>• Multi-select Projects with Select All and batch Delete<br>'+notes.innerHTML;
+    notes.innerHTML='• Carousel video export now moves as one uninterrupted seamless pan across the full design strip<br>• Home now opens directly in its compact layout instead of visibly resizing after startup<br>• Full 1,482-template production library is browsable through 11 parent categories with incremental loading for iPhone performance<br>• Parent browsing categories no longer overwrite each template’s original type, so Photo Dump and Carousel recommendations keep their intended behavior<br>• Detailed types such as Wedding, Cafe, Film, Journal, Birthday, Instant, Seasonal, Seamless Carousel, and more remain searchable<br>• Smart Layout understands blank multi-photo designs, Photo Dump, and Carousel instead of stacking selected photos<br>• Carousel + Photos fills existing template frames first, balances blank carousels across slides, and adds organized overflow slides only when needed<br>• Carousel New Design opens a real 3-slide carousel directly instead of falling through to Portrait Post<br>• Carousel templates have a dedicated Carousels category near the front of the category row<br>• Carousel is a core New Design choice while Photo Dump stays available<br>• Templates stay temporary until you actually edit them<br>• Projects show visual design previews instead of title-only thumbnails<br>• More compact Home creation banner<br>• Saved Palettes recolor designs, selected layers, canvases, and My Style<br>• Appearance themes, custom accent color, and local custom wallpaper<br>• Phone-ratio wallpaper crop with drag and zoom before saving<br>• iPhone wallpaper uses one dedicated fixed viewport layer instead of competing fixed backgrounds<br>• Minimize editor controls without leaving the active tool<br>• Draw on the full canvas while Draw controls are hidden<br>• 28 additional Canvas Style presets<br>• 27 Auto Dump shuffle looks<br>• Multi-select Projects with Select All and batch Delete<br>'+notes.innerHTML;
   }
 });
 
@@ -59,6 +73,9 @@ async function loadExperienceModules(){
   window.dispatchEvent(new CustomEvent('washi:experience-ready',{detail:{build:W.RUNTIME_BUILD,failed:[...failed]}}));
 }
 
+// release-version.js is a deferred script. During normal startup we wait only
+// for DOMContentLoaded (which fires after every defer script has executed), not
+// window.load (which can be delayed by images and caused visible UI reflow).
 if(document.readyState==='complete')loadExperienceModules();
-else window.addEventListener('load',loadExperienceModules,{once:true});
+else document.addEventListener('DOMContentLoaded',loadExperienceModules,{once:true});
 })();
