@@ -38,7 +38,6 @@ function makeBlankCarousel(){
 
 function enterEditor(p){
   DB.saveSettings({lastFormat:'carousel'});
-  DB.upsertProject(p);
   E.setProject(p);
   E.save({history:false});
 
@@ -56,7 +55,12 @@ function enterEditor(p){
 
   requestAnimationFrame(()=>{
     E.render();
-    E.fit();
+    const workspace=$('#editorWorkspace'),scroll=$('#stageScroll');
+    if(workspace&&scroll){
+      const z=Math.min((workspace.clientWidth-42)/SW,(workspace.clientHeight-175)/SH,1);
+      if(Number.isFinite(z)&&z>0){E.setZoom(z);scroll.style.placeItems='center start';scroll.scrollTo({left:0,top:0,behavior:'auto'})}
+      else E.fit();
+    }else E.fit();
     window.dispatchEvent(new CustomEvent('washi:carousel-created',{detail:{id:p.id,slides:SLIDES}}));
   });
 }
