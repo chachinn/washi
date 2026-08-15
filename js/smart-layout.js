@@ -141,6 +141,14 @@ async function smartCarouselAdd(rawFiles,{source='carousel'}={}){
  finally{busy=false}
 }
 
+function repairLegacyCarousel(){
+ const q=project();if(!q?.carousel?.enabled||busy||q.smartLayout?.mode==='carousel')return false;
+ const media=(q.objects||[]).filter(isMedia),legacy=media.filter(o=>o.carouselExtension&&!o.smartLayoutManaged);
+ if(!legacy.length||q.name!=='Untitled Carousel')return false;
+ placeManagedCarousel(q,media);media.forEach(o=>{o.smartLayoutManaged=true;delete o.carouselExtension});
+ E.state.selectedId=null;E.render();E.save({history:false});toast('Old carousel photos organized automatically');return true;
+}
+
 function autoCanvasMedia(q){return(q.objects||[]).filter(o=>isMedia(o)&&!o.isPhotoBackground)}
 function layoutCanvas(q,media){
  const boxes=rects(media.length,q.width,q.height,0);media.forEach((o,i)=>{const b=boxes[i];Object.assign(o,{x:b.x,y:b.y,w:b.w,h:b.h,rotation:0,radius:media.length===1?22:media.length>=9?10:16,fit:'cover',smartLayoutManaged:true})});
@@ -182,9 +190,9 @@ document.addEventListener('change',async e=>{
  else await smartCanvasAdd(files,{source:mode==='photo-dump'?'photo-dump-add':'blank-multi-photo'});
 },true);
 
-for(const evt of['washi:selection-changed','washi:project-saved','washi:carousel-created'])window.addEventListener(evt,()=>requestAnimationFrame(patchCarouselButton));
+for(const evt of['washi:selection-changed','washi:project-saved','washi:carousel-created'])window.addEventListener(evt,()=>requestAnimationFrame(()=>{patchCarouselButton();repairLegacyCarousel()}));
 window.addEventListener('resize',()=>requestAnimationFrame(patchCarouselButton),{passive:true});
-setTimeout(()=>{ensureSmartInput();patchCarouselButton()},180);
+setTimeout(()=>{ensureSmartInput();patchCarouselButton();repairLegacyCarousel()},180);
 
-W.SmartLayout={version:'v1.0',rects,balancedCounts,smartCarouselAdd,smartCanvasAdd,patchCarouselButton,isBusy:()=>busy};
+W.SmartLayout={version:'v1.0',rects,balancedCounts,smartCarouselAdd,smartCanvasAdd,patchCarouselButton,repairLegacyCarousel,isBusy:()=>busy};
 })();
