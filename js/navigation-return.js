@@ -56,7 +56,29 @@ function isEditorEntry(target){
     '[data-action="photo-dump"]'
   ].join(','));
 }
+
+// Temporary editor interaction modes (photo crop/reposition and photo swap)
+// install capture-phase pointer handlers. They must never survive a route/view
+// change, otherwise the next editor visit can look normal while taps are still
+// captured by stale state from the previous visit.
+function endEditorInteractions(save=true){
+  try{W.AutoDumpPhotoEdit?.finishEdit?.(save)}catch(err){console.warn('Washi Auto Dump photo edit cleanup skipped',err)}
+  try{W.SmartPhotoFill?.exitCrop?.(save)}catch(err){console.warn('Washi photo crop cleanup skipped',err)}
+  try{W.PhotoSwap?.cancel?.()}catch(err){console.warn('Washi photo swap cleanup skipped',err)}
+
+  // Defensive DOM cleanup also repairs an already-stale session where the
+  // module state was lost but its classes/HUD remained behind.
+  $('#editorView')?.classList.remove('washi-auto-dump-photo-editing');
+  $('#designStage')?.classList.remove('photo-crop-mode');
+  $('#objectsLayer .photo-cropping')?.classList.remove('photo-cropping');
+  const cropHud=$('#washiMediaCropHUD');
+  if(cropHud)cropHud.hidden=true;
+  $('#selectionBar')?.classList.remove('crop-hidden');
+  document.documentElement.classList.remove('washi-photo-swap-mode');
+}
+
 function closeEditorChrome(){
+  endEditorInteractions(true);
   const panel=$('#editorPanel'),modal=$('#modal'),drawer=$('#drawer');
   panel?.classList.remove('open');
   panel?.setAttribute('aria-hidden','true');
@@ -117,7 +139,11 @@ document.addEventListener('click',event=>{
   // feature module changes how the editor is opened later.
   if(target.closest('#templatesView [data-template-id]'))rememberOrigin('templates');
 
-  if(target.closest('#exitEditor'))leaveEditor(event);
+  if(target.closest('#exitEditor'))return leaveEditor(event);
+
+  // Bottom navigation and drawer route buttons use app.js routing rather than
+  // leaveEditor(). Clean transient editor modes before that route handler runs.
+  if($('#editorView')?.classList.contains('active')&&target.closest('[data-route]'))endEditorInteractions(true);
 },true);
 
 document.addEventListener('keydown',event=>{
@@ -126,6 +152,13 @@ document.addEventListener('keydown',event=>{
   leaveEditor(event);
 },true);
 
-window.addEventListener('pagehide',()=>{const route=activeRoute();if(route)rememberOrigin(route)});
-W.NavigationReturn={rememberOrigin,restoreOrigin,getOrigin:()=>({...origin}),version:'v1.0'};
+window.addEventListener('pagehide',()=>{
+  if($('#editorView')?.classList.contains('active'))endEditorInteractions(true);
+  const route=activeRoute();if(route)rememberOrigin(route);
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden&&$('#editorView')?.classList.contains('active'))endEditorInteractions(true);
+});
+
+W.NavigationReturn={rememberOrigin,restoreOrigin,endEditorInteractions,getOrigin:()=>({...origin}),version:'v1.0-interaction-cleanup'};
 })();
