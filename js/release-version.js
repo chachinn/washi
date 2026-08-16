@@ -3,7 +3,7 @@
 const W=window.Washi=window.Washi||{};
 W.VERSION='v1.0';
 W.RELEASE_STAGE='pre-release';
-W.RUNTIME_BUILD='20260816-template-edit-fix1';
+W.RUNTIME_BUILD='20260816-template-replace-fix2';
 document.documentElement.dataset.washiVersion='v1.0';
 
 // Critical Home sizing is installed immediately so the first visible layout is
