@@ -17,28 +17,16 @@ function installWallpaperLayer(){
 function stabilizeNav(){
  const nav=document.getElementById('bottomNav');
  if(!nav)return;
- // Keep persistent navigation outside the scrollable app shell.
+ // Keep persistent navigation outside the scrollable app shell so no page
+ // transform or content height can turn it into scrolling content.
  if(nav.parentElement!==document.body)document.body.append(nav);
- if(!nav.dataset.washiBottomInset){
-  const bottom=parseFloat(getComputedStyle(nav).bottom);
-  nav.dataset.washiBottomInset=String(Number.isFinite(bottom)?bottom:10);
- }
- if(!IS_IOS){
-  nav.style.removeProperty('top');
-  nav.style.removeProperty('position');
-  nav.style.removeProperty('bottom');
-  return;
- }
- // iOS can occasionally composite position:fixed against an older layout viewport
- // after long scrolling. Track the visual viewport in document coordinates instead.
  const vv=window.visualViewport;
- const pageTop=Number.isFinite(vv?.pageTop)?vv.pageTop:(window.scrollY+(vv?.offsetTop||0));
- const height=vv?.height||window.innerHeight||0;
- const inset=Number(nav.dataset.washiBottomInset)||10;
- const top=Math.max(0,Math.round(pageTop+height-nav.offsetHeight-inset));
- nav.style.setProperty('position','absolute','important');
- nav.style.setProperty('top',`${top}px`,'important');
- nav.style.setProperty('bottom','auto','important');
+ const height=Math.max(1,Math.round(vv?.height||window.innerHeight||document.documentElement.clientHeight||0));
+ const offsetTop=Math.max(0,Math.round(vv?.offsetTop||0));
+ const navHeight=Math.max(1,Math.round(nav.getBoundingClientRect().height||76));
+ document.documentElement.style.setProperty('--washi-vv-height',`${height}px`);
+ document.documentElement.style.setProperty('--washi-vv-top',`${offsetTop}px`);
+ document.documentElement.style.setProperty('--washi-nav-height',`${navHeight}px`);
 }
 
 async function ensureServiceWorker(){
@@ -68,8 +56,9 @@ body.washi-wallpaper-enabled{background:none!important;background-image:none!imp
 body.washi-wallpaper-enabled::before{content:none!important;display:none!important;background:none!important}
 body.washi-wallpaper-enabled #washiWallpaperViewport{background-image:linear-gradient(rgba(255,250,253,var(--washi-wallpaper-overlay,.48)),rgba(255,247,250,var(--washi-wallpaper-overlay,.48))),var(--washi-wallpaper-url)}
 #app{position:relative;z-index:1}
-.bottom-nav{z-index:40!important;left:50%!important;right:auto!important;transform:translate3d(-50%,0,0)!important;backface-visibility:hidden;will-change:top}
-html:not(.washi-ios-nav-track) .bottom-nav{position:fixed!important;top:auto!important;bottom:max(10px,var(--safe-bottom))!important}
+.bottom-nav{position:fixed!important;z-index:40!important;left:50%!important;right:auto!important;transform:translate3d(-50%,0,0)!important;backface-visibility:hidden;will-change:transform}
+html.washi-ios-nav-track .bottom-nav{top:calc(var(--washi-vv-top,0px) + var(--washi-vv-height,100dvh) - var(--washi-nav-height,76px) - max(10px,var(--safe-bottom)))!important;bottom:auto!important}
+html:not(.washi-ios-nav-track) .bottom-nav{top:auto!important;bottom:max(10px,var(--safe-bottom))!important}
 `;
 
 function boot(){
@@ -88,5 +77,5 @@ function boot(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
 
-W.MobileStability={sync,ensureServiceWorker,version:'v1.0-ios-visual-viewport-nav'};
+W.MobileStability={sync,ensureServiceWorker,version:'v1.0-ios-fixed-visual-viewport-nav'};
 })();
