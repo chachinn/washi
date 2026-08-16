@@ -63,7 +63,10 @@ window.addEventListener('washi:selection-changed',()=>{
 const nativeReplace=E.replaceSelectedMedia?.bind(E);
 if(nativeReplace){
  E.replaceSelectedMedia=async function(file){
+  const before=E.selected?.();
+  const wasTemplateSample=!!(before?.sampleMedia||before?.sampleSource||before?.templatePhotoSlot);
   const out=await nativeReplace(file);
+  if(out&&wasTemplateSample)out.templatePhotoSlot=true;
   if(out?.sampleMedia||out?.sampleSource){
    delete out.sampleMedia;
    delete out.sampleSource;
@@ -75,7 +78,7 @@ if(nativeReplace){
 }
 
 W.TemplateMediaEditFix={
- version:'2026.08.16-r2-replace',
+ version:'2026.08.16-r3-template-slot',
  normalizeObject,
  normalizeSelected,
  normalizeProject(project){let changed=0;for(const o of project?.objects||[])if(normalizeObject(o))changed++;return changed}
