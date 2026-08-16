@@ -20,12 +20,16 @@ function normalizeObject(o){
  return true;
 }
 
-function normalizeSelected(){
- const o=E.selected?.();
- if(!normalizeObject(o))return false;
- E.refreshObject?.();
+function syncMediaUI(){
  W.SmartPhotoFill?.syncFillButton?.();
  requestAnimationFrame(()=>W.SmartPhotoFill?.applyAllMediaCrops?.());
+}
+
+function normalizeSelected({refresh=true}={}){
+ const o=E.selected?.();
+ if(!normalizeObject(o))return false;
+ if(refresh)E.refreshObject?.();
+ syncMediaUI();
  return true;
 }
 
@@ -37,11 +41,43 @@ objects?.addEventListener('pointerdown',event=>{
  normalizeObject(o);
 },true);
 
-window.addEventListener('washi:selection-changed',normalizeSelected);
+// Normalize before the click event so the older media-fill/app handlers see a
+// real image/video and choose Replace rather than placeholder Fill mode.
+document.addEventListener('pointerdown',event=>{
+ const target=event.target instanceof Element?event.target:null;
+ if(!target?.closest('[data-object-action="fill"],[data-paction="replace-media"]'))return;
+ normalizeSelected();
+},true);
+
+document.addEventListener('click',event=>{
+ const target=event.target instanceof Element?event.target:null;
+ if(!target?.closest('[data-object-action="fill"],[data-paction="replace-media"]'))return;
+ normalizeSelected();
+},true);
+
+window.addEventListener('washi:selection-changed',()=>{
+ normalizeSelected();
+ syncMediaUI();
+});
+
+const nativeReplace=E.replaceSelectedMedia?.bind(E);
+if(nativeReplace){
+ E.replaceSelectedMedia=async function(file){
+  const out=await nativeReplace(file);
+  if(out?.sampleMedia||out?.sampleSource){
+   delete out.sampleMedia;
+   delete out.sampleSource;
+   E.save?.({history:false,renderUI:false});
+  }
+  syncMediaUI();
+  return out;
+ };
+}
 
 W.TemplateMediaEditFix={
- version:'2026.08.16-r1',
+ version:'2026.08.16-r2-replace',
  normalizeObject,
+ normalizeSelected,
  normalizeProject(project){let changed=0;for(const o of project?.objects||[])if(normalizeObject(o))changed++;return changed}
 };
 })();
