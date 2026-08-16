@@ -57,22 +57,25 @@ function isEditorEntry(target){
   ].join(','));
 }
 
-// Temporary editor interaction modes (photo crop/reposition and photo swap)
-// install capture-phase pointer handlers. They must never survive a route/view
-// change, otherwise the next editor visit can look normal while taps are still
-// captured by stale state from the previous visit.
+// Temporary editor interaction modes install capture-phase pointer handlers.
+// They must never survive a route/view change, otherwise the next editor visit
+// can look normal while taps are still captured by stale state.
 function endEditorInteractions(save=true){
   try{W.AutoDumpPhotoEdit?.finishEdit?.(save)}catch(err){console.warn('Washi Auto Dump photo edit cleanup skipped',err)}
   try{W.SmartPhotoFill?.exitCrop?.(save)}catch(err){console.warn('Washi photo crop cleanup skipped',err)}
   try{W.PhotoSwap?.cancel?.()}catch(err){console.warn('Washi photo swap cleanup skipped',err)}
+  try{W.CanvasMultiSelect?.cancel?.()}catch(err){console.warn('Washi multi-select cleanup skipped',err)}
 
-  // Defensive DOM cleanup also repairs an already-stale session where the
-  // module state was lost but its classes/HUD remained behind.
-  $('#editorView')?.classList.remove('washi-auto-dump-photo-editing');
+  // Defensive DOM cleanup also repairs an already-stale session where module
+  // state was lost but its classes/HUD remained behind.
+  $('#editorView')?.classList.remove('washi-auto-dump-photo-editing','washi-canvas-multi-active');
   $('#designStage')?.classList.remove('photo-crop-mode');
   $('#objectsLayer .photo-cropping')?.classList.remove('photo-cropping');
+  $('#objectsLayer')?.querySelectorAll('.washi-multi-selected').forEach(node=>node.classList.remove('washi-multi-selected'));
   const cropHud=$('#washiMediaCropHUD');
   if(cropHud)cropHud.hidden=true;
+  const multiBar=$('#washiCanvasMultiBar');
+  if(multiBar)multiBar.hidden=true;
   $('#selectionBar')?.classList.remove('crop-hidden');
   document.documentElement.classList.remove('washi-photo-swap-mode');
 }
@@ -128,21 +131,15 @@ document.addEventListener('click',event=>{
   const target=event.target instanceof Element?event.target:null;
   if(!target)return;
 
-  // Record the source from the actual DOM section first. This removes the old
-  // dependency on a fragile inferred active route for template-card entry.
   if(isEditorEntry(target)){
     const source=routeFromTarget(target)||activeRoute();
     if(source)rememberOrigin(source);
   }
 
-  // Template cards inside Templates always return to Templates, even if another
-  // feature module changes how the editor is opened later.
   if(target.closest('#templatesView [data-template-id]'))rememberOrigin('templates');
 
   if(target.closest('#exitEditor'))return leaveEditor(event);
 
-  // Bottom navigation and drawer route buttons use app.js routing rather than
-  // leaveEditor(). Clean transient editor modes before that route handler runs.
   if($('#editorView')?.classList.contains('active')&&target.closest('[data-route]'))endEditorInteractions(true);
 },true);
 
@@ -160,5 +157,5 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden&&$('#editorView')?.classList.contains('active'))endEditorInteractions(true);
 });
 
-W.NavigationReturn={rememberOrigin,restoreOrigin,endEditorInteractions,getOrigin:()=>({...origin}),version:'v1.0-interaction-cleanup'};
+W.NavigationReturn={rememberOrigin,restoreOrigin,endEditorInteractions,getOrigin:()=>({...origin}),version:'v1.0-interaction-cleanup2'};
 })();
