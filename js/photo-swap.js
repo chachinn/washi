@@ -77,8 +77,11 @@ document.addEventListener('click',event=>{
   const selected=E.selected?.();
   if(!eligible(selected)||mediaCount()<2){toast('Select a photo with another photo available');return}
   if(sourceId===selected.id){setMode(null);return}
-  setMode(selected.id);toast('Now tap the photo you want to swap with');
+  setMode(selected.id);toast('Now tap the photo you want to swap with');return;
  }
+ // Leaving the canvas or choosing another editor command cleanly exits swap mode
+ // instead of leaving a stale tap-capture state on the next screen/tool.
+ if(sourceId&&target.closest('button,input,select,textarea,[data-route],#exitEditor'))setMode(null);
 },true);
 
 document.addEventListener('pointerdown',event=>{
@@ -90,7 +93,9 @@ document.addEventListener('pointerdown',event=>{
  const source=mediaObject(sourceId),other=mediaObject(node.dataset.objectId);
  if(!source){setMode(null);return}
  if(other?.id===source.id){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();toast('Tap a different photo');return}
- if(!eligible(other)){toast('Choose another photo');return}
+ if(!eligible(other)){
+  event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();toast('Choose another photo');return;
+ }
  event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
  swap(source,other);
 },true);
@@ -98,6 +103,7 @@ document.addEventListener('pointerdown',event=>{
 window.addEventListener('washi:selection-changed',()=>requestAnimationFrame(syncButton));
 window.addEventListener('washi:project-saved',()=>{if(sourceId&&!mediaObject(sourceId))setMode(null)});
 window.addEventListener('washi:experience-ready',()=>requestAnimationFrame(syncButton));
+document.addEventListener('visibilitychange',()=>document.hidden&&sourceId&&setMode(null));
 setTimeout(syncButton,160);
 
 const css=document.createElement('style');css.textContent=`
