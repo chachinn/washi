@@ -64,6 +64,7 @@ body.washi-wallpaper-enabled #washiWallpaperViewport{background-image:linear-gra
 /* Persistent tabs: cap the iPhone safe-area contribution. Some iOS visual-
    viewport states can transiently expose an oversized env() inset; allowing
    that value to control height created the giant white navigation block. */
+.app-shell{padding-bottom:calc(110px + min(var(--safe-bottom),34px))!important}
 .bottom-nav{position:fixed!important;z-index:60!important;left:50%!important;right:auto!important;transform:translate3d(-50%,0,0)!important;backface-visibility:hidden;will-change:transform;box-sizing:border-box!important;height:calc(76px + min(var(--safe-bottom),34px))!important;min-height:76px!important;max-height:110px!important;padding:8px 12px calc(8px + min(var(--safe-bottom),34px))!important;border-radius:25px 25px 0 0!important;pointer-events:auto!important}
 html.washi-ios-nav-track .bottom-nav{top:calc(var(--washi-vv-top,0px) + var(--washi-vv-height,100dvh) - var(--washi-nav-height,76px))!important;bottom:auto!important}
 html:not(.washi-ios-nav-track) .bottom-nav{top:auto!important;bottom:0!important}
